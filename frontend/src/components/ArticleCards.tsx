@@ -32,6 +32,7 @@ export default function ArticleCards() {
     const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [authorName, setAuthorName] = useState<string>('');
     const [pagination, setPagination] = useState<PaginationData>({
         total: 0,
         page: 1,
@@ -63,6 +64,12 @@ export default function ArticleCards() {
                 console.log("Articles data received:", res.data);
                 setArticles(res.data.articles);
                 setPagination(res.data.pagination);
+
+                // Get the author name from the first article if it exists
+                if (isAuthorView && res.data.articles.length > 0) {
+                    setAuthorName(res.data.articles[0].autor || 'Desconocido');
+                }
+
                 setLoading(false);
             })
             .catch(err => {
@@ -71,6 +78,7 @@ export default function ArticleCards() {
                 setLoading(false);
             });
     }, [tagId, authorId, isTagView, isAuthorView, currentPage]);
+
 
     const handleCardClick = (id: string) => {
         navigate(`/articles/${id}`);
@@ -142,7 +150,7 @@ export default function ArticleCards() {
     if (isTagView) {
         pageTitle = `Artículos con tag: ${tagId}`;
     } else if (isAuthorView) {
-        pageTitle = `Artículos de: ${authorId}`;
+        pageTitle = `Artículos de: ${authorName || 'Cargando...'}`;
     }
 
     return (
