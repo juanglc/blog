@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: backend-container
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mongo
+    volumes:
+      - ./backend:/app
+    command: python manage.py runserver 0.0.0.0:8000
+
+  frontend:
+    build: ./frontend
+    container_name: frontend-container
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    command: npm run dev
+
+  mongo:
+    image: mongo
+    container_name: mongo-container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

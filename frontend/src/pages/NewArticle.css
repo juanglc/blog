@@ -1,0 +1,181 @@
+/* src/pages/NewArticle.css */
+.new-article-container {
+    max-width: 900px;
+    margin: 2.5rem auto;
+    padding: 2.5rem;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.new-article-container h2 {
+    margin-bottom: 2rem;
+    color: #2a3f54;
+    font-size: 2rem;
+    font-weight: 600;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #eaedf1;
+}
+
+.form-group {
+    margin-bottom: 2rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: #2a3f54;
+    font-size: 1.1rem;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    padding: 0.875rem;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: #f8f9fa;
+    color: #333333 !important; /* Dark gray text */
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    border-color: #4b91f1;
+    box-shadow: 0 0 0 3px rgba(75, 145, 241, 0.15);
+    outline: none;
+    color: #1f1f1f;
+}
+
+.tags-checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+}
+
+.tag-checkbox {
+    display: flex;
+    align-items: center;
+    background-color: #eef2ff;
+    border: 1px solid #dbe4ff;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tag-checkbox:hover {
+    background-color: #dbe4ff;
+}
+
+.tag-checkbox input[type="checkbox"] {
+    margin-right: 8px;
+    accent-color: #4263eb;
+}
+
+.tag-checkbox label {
+    margin-bottom: 0;
+    font-weight: 500;
+    cursor: pointer;
+    color: #3b4c68;
+    font-size: 0.95rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eaedf1;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 0.75rem 1.75rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: #4263eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #3b5bdb;
+    box-shadow: 0 2px 8px rgba(66, 99, 235, 0.3);
+}
+
+.btn-primary:disabled {
+    background-color: #91a7ff;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: #eef2ff;
+    color: #4263eb;
+    border: 1px solid #dbe4ff;
+}
+
+.btn-secondary:hover {
+    background-color: #dbe4ff;
+}
+
+.error-message {
+    color: #e53935;
+    background-color: #ffebee;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #e53935;
+}
+
+/* Make the MDEditor container have consistent styling */
+.w-md-editor {
+    margin-bottom: 1rem;
+    border-radius: 8px !important;
+    overflow: hidden;
+}
+
+.w-md-editor-toolbar {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #d0d7de !important;
+}
+
+.w-md-editor-text {
+    background-color: #ffffff !important;
+}
+
+/* Fix for input text colors in markdown editor */
+.w-md-editor-text-pre > code,
+.w-md-editor-text-input {
+    color: #333333 !important;
+}
+
+.w-md-editor-preview {
+    color: #333333 !important;
+}
+
+.w-md-editor-content {
+    background-color: #ffffff !important;
+}
+
+/* Fix for markdown editor text */
+.wmde-markdown-var {
+    --color-fg-default: #333333;
+}
+
+/* Ensure text is visible in all states */
+input::placeholder,
+textarea::placeholder {
+    color: #999999;
+}
