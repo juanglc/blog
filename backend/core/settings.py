@@ -37,9 +37,6 @@ JWT_EXP_DELTA_SECONDS = 3600
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = ['.onrender.com', 'blog-hlkv.onrender.com', 'localhost', '127.0.0.1']
-
 # Application definition
 
 INSTALLED_APPS = [

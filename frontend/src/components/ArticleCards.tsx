@@ -3,8 +3,6 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './ArticleCards.css';
 import '../pages/ArticlePage.css';
-// src/api/config.js
-import API_URL from '../api/config';
 
 type Article = {
     imagen_url: string;
@@ -50,12 +48,12 @@ export default function ArticleCards() {
     useEffect(() => {
         setLoading(true);
 
-        let apiUrl = `${API_URL}api/articles/`;
+        let apiUrl = 'http://127.0.0.1:8000/api/articles/';
 
         if (isTagView) {
-            apiUrl = `${API_URL}api/articles/tag/${tagId}/`;
+            apiUrl = `http://127.0.0.1:8000/api/articles/tag/${tagId}/`;
         } else if (isAuthorView) {
-            apiUrl = `${API_URL}api/articles/author/${authorId}/`;
+            apiUrl = `http://127.0.0.1:8000/api/articles/author/${authorId}/`;
         }
 
         // Add pagination parameters
@@ -173,7 +171,7 @@ export default function ArticleCards() {
                             <img
                                 src={article.imagen_url.startsWith('http')
                                     ? article.imagen_url
-                                    : `https://blog-hlkv.onrender.com/media${article.imagen_url}`}
+                                    : `http://127.0.0.1:8000${article.imagen_url}`}
                                 alt={article.titulo}
                                 className="article-image"
                             />
@@ -185,7 +183,7 @@ export default function ArticleCards() {
                                         <strong>Autor:</strong>{' '}
                                         <button
                                             className="author-button"
-                                            onClick={(e) => handleAuthorClick(e, article.autor, article.autor_id || "")}
+                                            onClick={(e) => handleAuthorClick(e, article.autor, article.autor_id)}
                                         >
                                             {article.autor || 'Desconocido'}
                                         </button>

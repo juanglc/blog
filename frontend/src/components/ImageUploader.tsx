@@ -3,7 +3,6 @@ import { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import './ImageUploader.css';
-import API_URL from '../api/config';
 
 type ImageUploaderProps = {
     onImageUploaded: (imageUrl: string) => void;
@@ -17,13 +16,11 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
     const [error, setError] = useState('');
 
     // Set the preview URL from the existing image URL when component mounts
-    // Fix in ImageUploader.tsx
     useEffect(() => {
-        // In useEffect
         if (existingImageUrl) {
             const fullUrl = existingImageUrl.startsWith('http')
                 ? existingImageUrl
-                : `https://blog-hlkv.onrender.com${existingImageUrl}`;
+                : `http://127.0.0.1:8000${existingImageUrl}`;
             setPreviewUrl(fullUrl);
         }
     }, [existingImageUrl]);
@@ -47,7 +44,7 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
             const formData = new FormData();
             formData.append('image', file);
 
-            const response = await axios.post(`${API_URL}api/upload/image/`, formData, {
+            const response = await axios.post('http://127.0.0.1:8000/api/upload/image/', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
