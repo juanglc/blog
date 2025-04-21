@@ -58,11 +58,11 @@ INSTALLED_APPS = [
 
 # Remove the CSRF middleware from the MIDDLEWARE list
 MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',  # Only once
+    'django.contrib.sessions.middleware.SessionMiddleware',# Only once
     # 'django.middleware.csrf.CsrfViewMiddleware',  # Commented out
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -139,6 +139,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://blog-hlkv.onrender.com",
+    "https://blog-pi-blond-32.vercel.app/",
     # Add your frontend URL if different from backend
 ]
 
