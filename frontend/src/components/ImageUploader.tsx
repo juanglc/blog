@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import './ImageUploader.css';
+import {API_URL} from "../api/config.ts";
 
 type ImageUploaderProps = {
     onImageUploaded: (imageUrl: string) => void;
@@ -48,7 +49,7 @@ function ImageUploader({
             const formData = new FormData();
             formData.append('image', file);
 
-            const response = await axios.post('http://127.0.0.1:8000/api/upload/image/', formData, {
+            const response = await axios.post(`${API_URL}/api/upload/image/`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }

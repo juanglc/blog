@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import ImageUploader from '../components/ImageUploader';
 import './ArticlePage.css';
+import {API_URL} from "../api/config.ts";
 
 type Tag = {
     _id: string;
@@ -39,7 +40,7 @@ export default function NewArticle() {
     };
 
     useEffect(() => {
-        axios.get('http://127.0.0.1:8000/api/tags/')
+        axios.get(`${API_URL}/api/tags/`)
             .then(res => {
                 setAvailableTags(res.data);
                 addDebug(`Fetched ${res.data.length} tags`);
@@ -251,7 +252,7 @@ export default function NewArticle() {
 
             // Use the create endpoint with POST
             const response = await axios.post(
-                'http://127.0.0.1:8000/api/articles/create/',
+                `${API_URL}/api/articles/create/`,
                 articleData
             );
 
@@ -312,7 +313,7 @@ export default function NewArticle() {
                         <img
                             src={imageUrl.startsWith('http')
                                 ? imageUrl
-                                : `http://127.0.0.1:8000${imageUrl}`}
+                                : `${API_URL}${imageUrl}`}
                             alt="Preview"
                             className="image-preview"
                             style={{ maxWidth: '200px', marginTop: '10px' }}
