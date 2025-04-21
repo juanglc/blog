@@ -19,10 +19,11 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
     // Set the preview URL from the existing image URL when component mounts
     // Fix in ImageUploader.tsx
     useEffect(() => {
+        // In useEffect
         if (existingImageUrl) {
             const fullUrl = existingImageUrl.startsWith('http')
                 ? existingImageUrl
-                : `${API_URL}${existingImageUrl.startsWith('/') ? '' : '/'}${existingImageUrl}`;
+                : `https://blog-hlkv.onrender.com${existingImageUrl}`;
             setPreviewUrl(fullUrl);
         }
     }, [existingImageUrl]);

@@ -120,13 +120,13 @@ export default function ArticlePage() {
         <div className="article-page">
             <h1>{article.titulo}</h1>
             <p>{article.descripcion}</p>
-            <img
-                src={article.imagen_url.startsWith('http')
-                    ? article.imagen_url
-                    : `${API_URL}${article.imagen_url.startsWith('/') ? '' : '/'}${article.imagen_url}`}
-                alt={article.titulo}
-                className="article-image"
-            />
+                <img
+                    src={article.imagen_url.startsWith('http')
+                        ? article.imagen_url
+                        : `https://blog-hlkv.onrender.com${article.imagen_url}`}
+                    alt={article.titulo}
+                    className="article-image"
+                />
             <p>
                 <strong>Autor:</strong>
                 <button
