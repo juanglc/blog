@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import ImageUploader from '../components/ImageUploader';
 import './ArticlePage.css';
-import API_URL from "../api/config.ts";
+import API_URL from "../api/config";
 
 type Tag = {
     nombre: string;
