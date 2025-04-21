@@ -37,6 +37,8 @@ JWT_EXP_DELTA_SECONDS = 3600
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = ['.onrender.com', 'blog-hlkv.onrender.com', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -136,6 +138,8 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://blog-hlkv.onrender.com",
+    # Add your frontend URL if different from backend
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -163,6 +167,8 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://blog-hlkv.onrender.com",
+    # Add your frontend URL if different from backend
 ]
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
