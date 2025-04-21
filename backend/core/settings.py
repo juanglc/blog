@@ -37,8 +37,6 @@ JWT_EXP_DELTA_SECONDS = 3600
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = ['.onrender.com', 'blog-hlkv.onrender.com', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -52,17 +50,15 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'auth_app',  # o el nombre de tu app
-
 ]
 
 
 # Remove the CSRF middleware from the MIDDLEWARE list
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',# Only once
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',  # Only once
     # 'django.middleware.csrf.CsrfViewMiddleware',  # Commented out
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -126,8 +122,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -138,9 +133,6 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://blog-hlkv.onrender.com",
-    "https://blog-pi-blond-32.vercel.app",
-    # Add your frontend URL if different from backend
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -168,9 +160,4 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://blog-hlkv.onrender.com",
-    "https://blog-pi-blond-32.vercel.app",
-    # Add your frontend URL if different from backend
 ]
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
