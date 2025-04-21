@@ -58,7 +58,7 @@ export default function UpdateArticle() {
         // Fetch all available tags
         const fetchTags = async () => {
             try {
-                const response = await fetch(`${API_URL}api/tags/`);
+                const response = await fetch(`${API_URL}/api/tags/`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch tags');
                 }
@@ -84,7 +84,7 @@ export default function UpdateArticle() {
         const fetchArticle = async () => {
             try {
                 addDebug(`Fetching article with ID: ${id}`);
-                const response = await fetch(`${API_URL}api/articles/${id}`);
+                const response = await fetch(`${API_URL}/api/articles/${id}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch article');
                 }
@@ -243,7 +243,7 @@ export default function UpdateArticle() {
 
             addDebug(`Sending update data: ${JSON.stringify(updateData)}`);
 
-            const response = await fetch(`${API_URL}api/articles/${id}/update/`, {
+            const response = await fetch(`${API_URL}/api/articles/${id}/update/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -343,7 +343,7 @@ export default function UpdateArticle() {
                         <img
                             src={formData.imagen_url.startsWith('http')
                                 ? formData.imagen_url
-                                : `${API_URL}${formData.imagen_url}`}
+                                : `${API_URL}${formData.imagen_url.startsWith('/') ? '' : '/'}${formData.imagen_url}`}
                             alt="Preview"
                             className="image-preview"
                             style={{ maxWidth: '200px', marginTop: '10px' }}
