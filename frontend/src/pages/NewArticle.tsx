@@ -226,7 +226,7 @@ export default function NewArticle() {
                         <img
                             src={imageUrl.startsWith('http')
                                 ? imageUrl
-                                : `${API_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`}
+                                : `${API_URL}${imageUrl}`}
                             alt="Preview"
                             className="image-preview"
                             style={{ maxWidth: '200px', marginTop: '10px' }}
