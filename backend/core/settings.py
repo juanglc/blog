@@ -139,7 +139,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://blog-hlkv.onrender.com",
-    "https://blog-pi-blond-32.vercel.app/",
+    "https://blog-pi-blond-32.vercel.app",
     # Add your frontend URL if different from backend
 ]
 
