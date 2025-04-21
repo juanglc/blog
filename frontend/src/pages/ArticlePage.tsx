@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import './ArticlePage.css';
-import API_URL from "../api/config";
 
 type Article = {
     imagen_url: string;
@@ -42,7 +41,7 @@ export default function ArticlePage() {
 
         const fetchArticle = async () => {
             try {
-                const response = await fetch(`${API_URL}api/articles/${id}`);
+                const response = await fetch(`http://127.0.0.1:8000/api/articles/${id}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch article');
                 }
@@ -89,7 +88,7 @@ export default function ArticlePage() {
         setIsDeleting(true);
 
         try {
-            await axios.delete(`${API_URL}api/articles/${id}/delete/`);
+            await axios.delete(`http://127.0.0.1:8000/api/articles/${id}/delete/`);
             navigate('/articles', { state: { message: 'Artículo eliminado correctamente' } });
         } catch (error) {
             console.error('Error deleting article:', error);
@@ -120,13 +119,13 @@ export default function ArticlePage() {
         <div className="article-page">
             <h1>{article.titulo}</h1>
             <p>{article.descripcion}</p>
-                <img
-                    src={article.imagen_url.startsWith('http')
-                        ? article.imagen_url
-                        : `https://blog-hlkv.onrender.com${article.imagen_url}`}
-                    alt={article.titulo}
-                    className="article-image"
-                />
+            <img
+                src={article.imagen_url.startsWith('http')
+                    ? article.imagen_url
+                    : `http://127.0.0.1:8000${article.imagen_url}`}
+                alt={article.titulo}
+                className="article-image"
+            />
             <p>
                 <strong>Autor:</strong>
                 <button
