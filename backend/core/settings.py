@@ -35,7 +35,8 @@ JWT_EXP_DELTA_SECONDS = 3600
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'https://blog-api-putk.onrender.com',  # Replace with your actual Render subdomain
+    'blog-hlkv.onrender.com',
+    'blog-api-putk.onrender.com',
 ]
 
 MEDIA_URL = '/media/'
@@ -147,7 +148,6 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "https://blog-pi-blond-32.vercel.app",
     "http://localhost:5173",
-    "https://blog-pi-blond-32.vercel.app",# Add your local frontend development server
 ]
 
 # Additional CORS settings
@@ -173,10 +173,8 @@ CORS_ALLOW_HEADERS = [
 ]
 # Add CSRF trusted origins to fix the 403 Forbidden error
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
     "https://blog-pi-blond-32.vercel.app",
-    "https://your-render-app.onrender.com",
+    "https://blog-api-putk.onrender.com",
 ]
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
