@@ -21,7 +21,7 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
         if (existingImageUrl) {
             const fullUrl = existingImageUrl.startsWith('http')
                 ? existingImageUrl
-                : `${API_URL}${existingImageUrl}`;
+                : `${API_URL}${existingImageUrl.startsWith('/') ? '' : '/'}${existingImageUrl}`;
             setPreviewUrl(fullUrl);
         }
     }, [existingImageUrl]);
@@ -45,7 +45,7 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
             const formData = new FormData();
             formData.append('image', file);
 
-            const response = await axios.post(`${API_URL}api/upload/image/`, formData, {
+            const response = await axios.post(`${API_URL}/api/upload/image/`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
