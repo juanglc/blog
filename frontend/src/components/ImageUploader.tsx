@@ -17,11 +17,12 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
     const [error, setError] = useState('');
 
     // Set the preview URL from the existing image URL when component mounts
+    // Fix in ImageUploader.tsx
     useEffect(() => {
         if (existingImageUrl) {
             const fullUrl = existingImageUrl.startsWith('http')
                 ? existingImageUrl
-                : `${API_URL}${existingImageUrl}`;
+                : `${API_URL}${existingImageUrl.startsWith('/') ? '' : '/'}${existingImageUrl}`;
             setPreviewUrl(fullUrl);
         }
     }, [existingImageUrl]);
