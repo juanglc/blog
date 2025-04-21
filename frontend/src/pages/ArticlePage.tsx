@@ -42,7 +42,7 @@ export default function ArticlePage() {
 
         const fetchArticle = async () => {
             try {
-                const response = await fetch(`${API_URL}/api/articles/${id}`);
+                const response = await fetch(`${API_URL}api/articles/${id}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch article');
                 }
@@ -89,7 +89,7 @@ export default function ArticlePage() {
         setIsDeleting(true);
 
         try {
-            await axios.delete(`${API_URL}/api/articles/${id}/delete/`);
+            await axios.delete(`${API_URL}api/articles/${id}/delete/`);
             navigate('/articles', { state: { message: 'Artículo eliminado correctamente' } });
         } catch (error) {
             console.error('Error deleting article:', error);

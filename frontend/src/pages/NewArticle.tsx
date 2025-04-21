@@ -31,7 +31,7 @@ export default function NewArticle() {
     };
 
     useEffect(() => {
-        axios.get(`${API_URL}/api/tags/`)
+        axios.get(`${API_URL}api/tags/`)
             .then(res => {
                 setAvailableTags(res.data);
                 addDebug(`Fetched ${res.data.length} tags`);
@@ -171,7 +171,7 @@ export default function NewArticle() {
 
             // Use the create endpoint with POST
             const response = await axios.post(
-                `${API_URL}/api/articles/create/`,
+                `${API_URL}api/articles/create/`,
                 articleData
             );
 
