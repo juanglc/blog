@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import ImageUploader from '../components/ImageUploader';
 import './ArticlePage.css';
-import API_URL from "src/api/config.ts";
+import API_URL from "../api/config";
 
 type Tag = {
     _id: string;
