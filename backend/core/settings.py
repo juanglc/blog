@@ -35,7 +35,6 @@ JWT_EXP_DELTA_SECONDS = 3600
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'blog-hlkv.onrender.com',
     'blog-api-putk.onrender.com',
 ]
 
@@ -146,7 +145,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "https://blog-pi-blond-32.vercel.app",
+    "https://blog-xi-five-20.vercel.app/",
     "http://localhost:5173",
 ]
 
@@ -173,7 +172,7 @@ CORS_ALLOW_HEADERS = [
 ]
 # Add CSRF trusted origins to fix the 403 Forbidden error
 CSRF_TRUSTED_ORIGINS = [
-    "https://blog-pi-blond-32.vercel.app",
+    "https://blog-xi-five-20.vercel.app/",
     "https://blog-api-putk.onrender.com",
 ]
 
