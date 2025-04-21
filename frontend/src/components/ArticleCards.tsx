@@ -173,7 +173,7 @@ export default function ArticleCards() {
                             <img
                                 src={article.imagen_url.startsWith('http')
                                     ? article.imagen_url
-                                    : `https://blog-hlkv.onrender.com${article.imagen_url}`}
+                                    : `https://blog-hlkv.onrender.com/media${article.imagen_url}`}
                                 alt={article.titulo}
                                 className="article-image"
                             />
