@@ -173,7 +173,7 @@ export default function ArticleCards() {
                             <img
                                 src={article.imagen_url.startsWith('http')
                                     ? article.imagen_url
-                                    : `${API_URL}${article.imagen_url}`}
+                                    : `${API_URL}${article.imagen_url.startsWith('/') ? '' : '/'}${article.imagen_url}`}
                                 alt={article.titulo}
                                 className="article-image"
                             />
