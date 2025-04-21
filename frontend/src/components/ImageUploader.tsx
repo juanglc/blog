@@ -1,4 +1,3 @@
-// src/components/ImageUploader.tsx
 import { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
@@ -8,20 +7,25 @@ type ImageUploaderProps = {
     onImageUploaded: (imageUrl: string) => void;
     label?: string;
     existingImageUrl?: string;
+    required?: boolean;
 };
 
-function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageUrl }: ImageUploaderProps) {
+function ImageUploader({
+                           onImageUploaded,
+                           label = 'Upload Image',
+                           existingImageUrl,
+                           required = true
+                       }: ImageUploaderProps) {
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [error, setError] = useState('');
+    const [imageSelected, setImageSelected] = useState(!!existingImageUrl);
 
     // Set the preview URL from the existing image URL when component mounts
     useEffect(() => {
         if (existingImageUrl) {
-            const fullUrl = existingImageUrl.startsWith('http')
-                ? existingImageUrl
-                : `http://127.0.0.1:8000${existingImageUrl}`;
-            setPreviewUrl(fullUrl);
+            setPreviewUrl(existingImageUrl);
+            setImageSelected(true);
         }
     }, [existingImageUrl]);
 
@@ -50,8 +54,17 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
                 }
             });
 
+            // Get the imageUrl from the response
+            const imageUrl = response.data.imageUrl;
+
+            if (!imageUrl) {
+                throw new Error('No image URL returned from server');
+            }
+
             // Call the callback with the image URL
-            onImageUploaded(response.data.url);
+            onImageUploaded(imageUrl);
+            setImageSelected(true);
+            setError('');
         } catch (err) {
             console.error('Upload failed:', err);
             setError('Failed to upload image');
@@ -70,19 +83,28 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
 
     return (
         <div className="image-uploader">
-            <label>{label}</label>
-            <div {...getRootProps()} className="dropzone">
-                <input {...getInputProps()} />
+            <label>
+                {label}
+                {required && !imageSelected && <span className="required-indicator"> *</span>}
+            </label>
+            <div
+                {...getRootProps()}
+                className={`dropzone ${required && !imageSelected ? 'required' : ''}`}
+            >
+                <input {...getInputProps()} required={required && !imageSelected} />
                 {previewUrl ? (
                     <div className="preview-container">
                         <img src={previewUrl} alt="Preview" className="image-preview" />
                         <p>Drop a new image to change</p>
                     </div>
                 ) : (
-                    <p>{uploading ? 'Uploading...' : 'Drag & drop an image, or click to select'}</p>
+                    <p>{uploading ? 'Uploading...' : `Drag & drop an image, or click to select${required ? ' (required)' : ''}`}</p>
                 )}
             </div>
             {error && <p className="error-message">{error}</p>}
+            {required && !imageSelected && !uploading && !error && (
+                <p className="error-message">An image is required</p>
+            )}
         </div>
     );
 }

@@ -183,7 +183,7 @@ export default function ArticleCards() {
                                         <strong>Autor:</strong>{' '}
                                         <button
                                             className="author-button"
-                                            onClick={(e) => handleAuthorClick(e, article.autor, article.autor_id)}
+                                            onClick={(e) => handleAuthorClick(e, article.autor, article.autor_id || '')}
                                         >
                                             {article.autor || 'Desconocido'}
                                         </button>

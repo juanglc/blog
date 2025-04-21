@@ -11,6 +11,14 @@ type Tag = {
     descripcion: string;
 };
 
+type FormErrors = {
+    titulo?: string;
+    descripcion?: string;
+    contenido_markdown?: string;
+    imagen_url?: string;
+    tags?: string;
+};
+
 export default function NewArticle() {
     const navigate = useNavigate();
     const [title, setTitle] = useState('');
@@ -21,6 +29,7 @@ export default function NewArticle() {
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [formErrors, setFormErrors] = useState<FormErrors>({});
     const [showPreview, setShowPreview] = useState(false);
     const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
@@ -43,14 +52,23 @@ export default function NewArticle() {
 
     const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
+        if (formErrors.titulo) {
+            setFormErrors({...formErrors, titulo: undefined});
+        }
     };
 
     const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setDescription(e.target.value);
+        if (formErrors.descripcion) {
+            setFormErrors({...formErrors, descripcion: undefined});
+        }
     };
 
     const handleContentChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setContent(e.target.value);
+        if (formErrors.contenido_markdown) {
+            setFormErrors({...formErrors, contenido_markdown: undefined});
+        }
     };
 
     const handleTagChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +77,9 @@ export default function NewArticle() {
         if (checked) {
             setSelectedTags(prev => [...prev, value]);
             addDebug(`Added tag: ${value}`);
+            if (formErrors.tags) {
+                setFormErrors({...formErrors, tags: undefined});
+            }
         } else {
             setSelectedTags(prev => prev.filter(tag => tag !== value));
             addDebug(`Removed tag: ${value}`);
@@ -68,6 +89,9 @@ export default function NewArticle() {
     const handleImageUrlUpdate = (url: string) => {
         setImageUrl(url);
         addDebug(`Image URL updated: ${url}`);
+        if (formErrors.imagen_url) {
+            setFormErrors({...formErrors, imagen_url: undefined});
+        }
     };
 
     const insertMarkdown = (markdownSyntax: string) => {
@@ -99,9 +123,6 @@ export default function NewArticle() {
             case 'link':
                 modifiedText = text.substring(0, start) + `[${text.substring(start, end) || 'texto del enlace'}](https://ejemplo.com)` + text.substring(end);
                 break;
-            case 'image':
-                modifiedText = text.substring(0, start) + `![${text.substring(start, end) || 'descripción de la imagen'}](https://ejemplo.com/imagen.jpg)` + text.substring(end);
-                break;
             case 'code':
                 modifiedText = text.substring(0, start) + `\`\`\`\n${text.substring(start, end) || 'código'}\n\`\`\`` + text.substring(end);
                 break;
@@ -122,6 +143,9 @@ export default function NewArticle() {
         }
 
         setContent(modifiedText);
+        if (formErrors.contenido_markdown) {
+            setFormErrors({...formErrors, contenido_markdown: undefined});
+        }
         addDebug(`Inserted ${markdownSyntax} markdown syntax`);
 
         // Focus back on textarea after a short delay
@@ -137,11 +161,68 @@ export default function NewArticle() {
         setShowPreview(!showPreview);
     };
 
+    const validateForm = (): boolean => {
+        const errors: FormErrors = {};
+        let isValid = true;
+
+        // Check title
+        if (!title || title.trim() === '') {
+            errors.titulo = 'El título no puede estar vacío';
+            isValid = false;
+        }
+
+        // Check description
+        if (!description || description.trim() === '') {
+            errors.descripcion = 'La descripción no puede estar vacía';
+            isValid = false;
+        }
+
+        // Check content
+        if (!content || content.trim() === '') {
+            errors.contenido_markdown = 'El contenido no puede estar vacío';
+            isValid = false;
+        }
+
+        // Check image
+        if (!imageUrl) {
+            errors.imagen_url = 'Debe subir una imagen';
+            isValid = false;
+        }
+
+        // Check tags (optional)
+        if (selectedTags.length === 0) {
+            errors.tags = 'Seleccione al menos un tag';
+            isValid = false;
+        }
+
+        setFormErrors(errors);
+        return isValid;
+    };
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
         setError('');
-        addDebug("Starting submission");
+        addDebug("Starting submission validation");
+
+        // Validate form before submitting
+        if (!validateForm()) {
+            addDebug("Form validation failed");
+            // Find first error field and focus
+            const errorFields = ['titulo', 'descripcion', 'contenido_markdown', 'imagen_url', 'tags'];
+            for (const field of errorFields) {
+                if (formErrors[field as keyof FormErrors]) {
+                    const element = document.getElementById(field);
+                    if (element) {
+                        element.focus();
+                        break;
+                    }
+                }
+            }
+            return;
+        }
+
+        setIsLoading(true);
+        addDebug("Form validated, starting submission");
 
         try {
             // Convert selected tag names to tag objects
@@ -158,7 +239,7 @@ export default function NewArticle() {
             const articleData = {
                 titulo: title,
                 contenido_markdown: content,
-                imagen_url: imageUrl || '/media/images/default.jpg',
+                imagen_url: imageUrl,
                 tags: tagsList,
                 autor_id: 'udf5a934c',
                 descripcion: description,
@@ -196,31 +277,37 @@ export default function NewArticle() {
             {error && <div className="message error">{error}</div>}
 
             <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="titulo">Title</label>
+                <div className={`form-group ${formErrors.titulo ? 'has-error' : ''}`}>
+                    <label htmlFor="titulo">Title <span className="required-field">*</span></label>
                     <input
                         type="text"
                         id="titulo"
                         value={title}
                         onChange={handleTitleChange}
-                        required
+                        className={formErrors.titulo ? 'error-input' : ''}
                     />
+                    {formErrors.titulo && <div className="error-message">{formErrors.titulo}</div>}
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="descripcion">Description</label>
+                <div className={`form-group ${formErrors.descripcion ? 'has-error' : ''}`}>
+                    <label htmlFor="descripcion">Description <span className="required-field">*</span></label>
                     <textarea
                         id="descripcion"
                         value={description}
                         onChange={handleDescriptionChange}
                         rows={3}
-                        required
+                        className={formErrors.descripcion ? 'error-input' : ''}
                     ></textarea>
+                    {formErrors.descripcion && <div className="error-message">{formErrors.descripcion}</div>}
                 </div>
 
-                <div className="form-group">
-                    <label>Image</label>
-                    <ImageUploader onImageUploaded={handleImageUrlUpdate} />
+                <div className={`form-group ${formErrors.imagen_url ? 'has-error' : ''}`}>
+                    <label>Image <span className="required-field">*</span></label>
+                    <ImageUploader
+                        onImageUploaded={handleImageUrlUpdate}
+                        required={true}
+                    />
+                    {formErrors.imagen_url && <div className="error-message">{formErrors.imagen_url}</div>}
                     {imageUrl && (
                         <img
                             src={imageUrl.startsWith('http')
@@ -233,8 +320,8 @@ export default function NewArticle() {
                     )}
                 </div>
 
-                <div className="form-group">
-                    <label>Tags</label>
+                <div className={`form-group ${formErrors.tags ? 'has-error' : ''}`}>
+                    <label>Tags <span className="required-field">*</span></label>
                     <div className="tags-container">
                         {availableTags.map(tag => (
                             <div key={tag._id} className="tag-checkbox">
@@ -249,10 +336,11 @@ export default function NewArticle() {
                             </div>
                         ))}
                     </div>
+                    {formErrors.tags && <div className="error-message">{formErrors.tags}</div>}
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="contenido_markdown">Content</label>
+                <div className={`form-group ${formErrors.contenido_markdown ? 'has-error' : ''}`}>
+                    <label htmlFor="contenido_markdown">Content <span className="required-field">*</span></label>
                     <div className="markdown-toolbar">
                         <button type="button" onClick={() => insertMarkdown('bold')} title="Bold">
                             <strong>B</strong>
@@ -271,9 +359,6 @@ export default function NewArticle() {
                         </button>
                         <button type="button" onClick={() => insertMarkdown('link')} title="Link">
                             🔗
-                        </button>
-                        <button type="button" onClick={() => insertMarkdown('image')} title="Image">
-                            🖼️
                         </button>
                         <button type="button" onClick={() => insertMarkdown('code')} title="Code Block">
                             &lt;/&gt;
@@ -301,13 +386,14 @@ export default function NewArticle() {
                             value={content}
                             onChange={handleContentChange}
                             rows={12}
-                            required
+                            className={formErrors.contenido_markdown ? 'error-input' : ''}
                         ></textarea>
                     ) : (
                         <div className="preview article-content">
                             <ReactMarkdown>{content}</ReactMarkdown>
                         </div>
                     )}
+                    {formErrors.contenido_markdown && <div className="error-message">{formErrors.contenido_markdown}</div>}
                 </div>
 
                 <div className="form-actions">

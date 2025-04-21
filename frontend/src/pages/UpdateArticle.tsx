@@ -22,6 +22,14 @@ type ArticleData = {
     fecha_actualizacion?: string;
 };
 
+type FormErrors = {
+    titulo?: string;
+    descripcion?: string;
+    contenido_markdown?: string;
+    imagen_url?: string;
+    tags?: string;
+};
+
 export default function UpdateArticle() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -32,6 +40,7 @@ export default function UpdateArticle() {
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
     const [debugInfo, setDebugInfo] = useState<string[]>([]);
+    const [formErrors, setFormErrors] = useState<FormErrors>({});
 
     // Tags state
     const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -132,6 +141,14 @@ export default function UpdateArticle() {
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+
+        // Clear error for this field when user starts typing
+        if (formErrors[name as keyof FormErrors]) {
+            setFormErrors(prev => ({
+                ...prev,
+                [name]: undefined
+            }));
+        }
     };
 
     const handleTagChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -143,6 +160,11 @@ export default function UpdateArticle() {
         } else {
             setSelectedTags(prev => prev.filter(tagId => tagId !== value));
             addDebug(`Removed tag ID: ${value}`);
+        }
+
+        // Clear tag error if any tags are selected
+        if (formErrors.tags) {
+            setFormErrors(prev => ({ ...prev, tags: undefined }));
         }
     };
 
@@ -175,9 +197,6 @@ export default function UpdateArticle() {
             case 'link':
                 modifiedText = text.substring(0, start) + `[${text.substring(start, end) || 'texto del enlace'}](https://ejemplo.com)` + text.substring(end);
                 break;
-            case 'image':
-                modifiedText = text.substring(0, start) + `![${text.substring(start, end) || 'descripción de la imagen'}](https://ejemplo.com/imagen.jpg)` + text.substring(end);
-                break;
             case 'code':
                 modifiedText = text.substring(0, start) + `\`\`\`\n${text.substring(start, end) || 'código'}\n\`\`\`` + text.substring(end);
                 break;
@@ -199,6 +218,11 @@ export default function UpdateArticle() {
 
         setFormData(prev => ({...prev, contenido_markdown: modifiedText}));
 
+        // Clear content error if it exists
+        if (formErrors.contenido_markdown) {
+            setFormErrors(prev => ({ ...prev, contenido_markdown: undefined }));
+        }
+
         addDebug(`Inserted ${markdownSyntax} markdown syntax`);
 
         // Focus back on textarea after a short delay
@@ -212,13 +236,64 @@ export default function UpdateArticle() {
 
     const handleImageUrlUpdate = (url: string) => {
         setFormData(prev => ({...prev, imagen_url: url}));
+
+        // Clear image error if it exists
+        if (formErrors.imagen_url) {
+            setFormErrors(prev => ({ ...prev, imagen_url: undefined }));
+        }
+
         addDebug(`Image URL updated: ${url}`);
+    };
+
+    const validateForm = (): boolean => {
+        const errors: FormErrors = {};
+        let isValid = true;
+
+        // Check title
+        if (!formData.titulo || formData.titulo.trim() === '') {
+            errors.titulo = "Title is required";
+            isValid = false;
+        }
+
+        // Check description
+        if (!formData.descripcion || formData.descripcion.trim() === '') {
+            errors.descripcion = "Description is required";
+            isValid = false;
+        }
+
+        // Check content
+        if (!formData.contenido_markdown || formData.contenido_markdown.trim() === '') {
+            errors.contenido_markdown = "Content is required";
+            isValid = false;
+        }
+
+        // Check image
+        if (!formData.imagen_url) {
+            errors.imagen_url = "Image is required";
+            isValid = false;
+        }
+
+        // Optional: validate tags
+        if (selectedTags.length === 0) {
+            errors.tags = "Select at least one tag";
+            isValid = false;
+        }
+
+        setFormErrors(errors);
+        return isValid;
     };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
         if (!id) return;
+
+        // Validate form before submitting
+        if (!validateForm()) {
+            addDebug("Form validation failed");
+            setMessage({text: "Please fill in all required fields", type: "error"});
+            return;
+        }
 
         setSubmitting(true);
         addDebug("Starting submission");
@@ -308,35 +383,38 @@ export default function UpdateArticle() {
             )}
 
             <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="titulo">Title</label>
+                <div className={`form-group ${formErrors.titulo ? 'has-error' : ''}`}>
+                    <label htmlFor="titulo">Title <span className="required-field">*</span></label>
                     <input
                         type="text"
                         id="titulo"
                         name="titulo"
                         value={formData.titulo}
                         onChange={handleChange}
-                        required
+                        className={formErrors.titulo ? 'error-input' : ''}
                     />
+                    {formErrors.titulo && <div className="error-message">{formErrors.titulo}</div>}
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="descripcion">Description</label>
+                <div className={`form-group ${formErrors.descripcion ? 'has-error' : ''}`}>
+                    <label htmlFor="descripcion">Description <span className="required-field">*</span></label>
                     <textarea
                         id="descripcion"
                         name="descripcion"
                         value={formData.descripcion}
                         onChange={handleChange}
                         rows={3}
-                        required
+                        className={formErrors.descripcion ? 'error-input' : ''}
                     ></textarea>
+                    {formErrors.descripcion && <div className="error-message">{formErrors.descripcion}</div>}
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="imagen_url">Image</label>
+                <div className={`form-group ${formErrors.imagen_url ? 'has-error' : ''}`}>
+                    <label htmlFor="imagen_url">Image <span className="required-field">*</span></label>
                     <ImageUploader
                         onImageUploaded={handleImageUrlUpdate}
                         existingImageUrl={formData.imagen_url}
+                        required={true}
                     />
                     {formData.imagen_url && (
                         <img
@@ -348,9 +426,10 @@ export default function UpdateArticle() {
                             style={{ maxWidth: '200px', marginTop: '10px' }}
                         />
                     )}
+                    {formErrors.imagen_url && <div className="error-message">{formErrors.imagen_url}</div>}
                 </div>
 
-                <div className="form-group">
+                <div className={`form-group ${formErrors.tags ? 'has-error' : ''}`}>
                     <label>Tags</label>
                     <div className="tags-container">
                         {allTags.map(tag => (
@@ -366,10 +445,11 @@ export default function UpdateArticle() {
                             </div>
                         ))}
                     </div>
+                    {formErrors.tags && <div className="error-message">{formErrors.tags}</div>}
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="contenido_markdown">Content</label>
+                <div className={`form-group ${formErrors.contenido_markdown ? 'has-error' : ''}`}>
+                    <label htmlFor="contenido_markdown">Content <span className="required-field">*</span></label>
                     <div className="markdown-toolbar">
                         <button type="button" onClick={() => insertMarkdown('bold')} title="Bold">
                             <strong>B</strong>
@@ -388,9 +468,6 @@ export default function UpdateArticle() {
                         </button>
                         <button type="button" onClick={() => insertMarkdown('link')} title="Link">
                             🔗
-                        </button>
-                        <button type="button" onClick={() => insertMarkdown('image')} title="Image">
-                            🖼️
                         </button>
                         <button type="button" onClick={() => insertMarkdown('code')} title="Code Block">
                             &lt;/&gt;
@@ -419,13 +496,14 @@ export default function UpdateArticle() {
                             value={formData.contenido_markdown}
                             onChange={handleChange}
                             rows={12}
-                            required
+                            className={formErrors.contenido_markdown ? 'error-input' : ''}
                         ></textarea>
                     ) : (
                         <div className="preview article-content">
                             <ReactMarkdown>{formData.contenido_markdown}</ReactMarkdown>
                         </div>
                     )}
+                    {formErrors.contenido_markdown && <div className="error-message">{formErrors.contenido_markdown}</div>}
                 </div>
 
                 <div className="form-actions">

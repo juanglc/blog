@@ -1,41 +1,46 @@
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+import boto3
 from django.conf import settings
-import os
 import uuid
-from django.core.files.storage import FileSystemStorage
 
-@csrf_exempt
+@api_view(['POST'])
 def upload_image(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    try:
+        # Get the image file from the request
+        image_file = request.FILES.get('image')
 
-    if 'image' not in request.FILES:
-        return JsonResponse({'error': 'No se envió ninguna imagen'}, status=400)
+        if not image_file:
+            return Response({'error': 'No image file provided'}, status=400)
 
-    image_file = request.FILES['image']
+        # Generate unique filename
+        file_extension = image_file.name.split('.')[-1].lower()
+        unique_filename = f"{uuid.uuid4()}.{file_extension}"
 
-    # Validate file type
-    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    if image_file.content_type not in allowed_types:
-        return JsonResponse({'error': 'Tipo de archivo no permitido'}, status=400)
+        # Upload directly to S3
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME
+        )
 
-    # Create media directory if it doesn't exist
-    media_root = os.path.join(settings.BASE_DIR, 'media', 'images')
-    os.makedirs(media_root, exist_ok=True)
+        # Upload the file without ACL parameter
+        s3_client.upload_fileobj(
+            image_file,
+            settings.AWS_STORAGE_BUCKET_NAME,
+            unique_filename,
+            ExtraArgs={
+                'ContentType': image_file.content_type
+                # Removed 'ACL': 'public-read' which was causing the error
+            }
+        )
 
-    # Generate unique filename
-    file_extension = os.path.splitext(image_file.name)[1]
-    unique_filename = f"{uuid.uuid4()}{file_extension}"
+        # Generate the URL for the uploaded image
+        image_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{unique_filename}"
 
-    # Save file
-    fs = FileSystemStorage(location=media_root)
-    filename = fs.save(unique_filename, image_file)
+        return Response({'imageUrl': image_url}, status=201)
 
-    # Generate URL
-    file_url = f"/media/images/{filename}"
-
-    return JsonResponse({
-        'url': file_url,
-        'filename': filename
-    })
+    except Exception as e:
+        print(f"Error uploading to S3: {str(e)}")
+        return Response({'error': str(e)}, status=500)
