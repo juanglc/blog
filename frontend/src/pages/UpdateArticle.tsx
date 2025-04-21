@@ -343,7 +343,7 @@ export default function UpdateArticle() {
                         <img
                             src={formData.imagen_url.startsWith('http')
                                 ? formData.imagen_url
-                                : `${API_URL}${formData.imagen_url.startsWith('/') ? '' : '/'}${formData.imagen_url}`}
+                                : `${API_URL}${formData.imagen_url}`}
                             alt="Preview"
                             className="image-preview"
                             style={{ maxWidth: '200px', marginTop: '10px' }}

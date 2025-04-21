@@ -21,7 +21,7 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
         if (existingImageUrl) {
             const fullUrl = existingImageUrl.startsWith('http')
                 ? existingImageUrl
-                : `${API_URL}${existingImageUrl.startsWith('/') ? '' : '/'}${existingImageUrl}`;
+                : `${API_URL}${existingImageUrl}`;
             setPreviewUrl(fullUrl);
         }
     }, [existingImageUrl]);
