@@ -7,7 +7,9 @@ django-cors-headers==4.7.0
 djangorestframework==3.16.0
 dnspython==1.16.0
 fastapi==0.115.12
+gunicorn==23.0.0
 idna==3.10
+packaging==25.0
 pillow==11.1.0
 pydantic==2.11.3
 pydantic_core==2.33.1
