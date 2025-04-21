@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './ArticleCards.css';
 import '../pages/ArticlePage.css';
+import {API_URL} from "../api/config.ts";
 
 type Article = {
     imagen_url: string;
@@ -48,12 +49,12 @@ export default function ArticleCards() {
     useEffect(() => {
         setLoading(true);
 
-        let apiUrl = 'http://127.0.0.1:8000/api/articles/';
+        let apiUrl = `${API_URL}/api/articles/`;
 
         if (isTagView) {
-            apiUrl = `http://127.0.0.1:8000/api/articles/tag/${tagId}/`;
+            apiUrl = `${API_URL}/api/articles/tag/${tagId}/`;
         } else if (isAuthorView) {
-            apiUrl = `http://127.0.0.1:8000/api/articles/author/${authorId}/`;
+            apiUrl = `${API_URL}/api/articles/author/${authorId}/`;
         }
 
         // Add pagination parameters
@@ -171,7 +172,7 @@ export default function ArticleCards() {
                             <img
                                 src={article.imagen_url.startsWith('http')
                                     ? article.imagen_url
-                                    : `http://127.0.0.1:8000${article.imagen_url}`}
+                                    : `${API_URL}${article.imagen_url}`}
                                 alt={article.titulo}
                                 className="article-image"
                             />
