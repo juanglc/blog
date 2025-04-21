@@ -3,6 +3,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import './ImageUploader.css';
+import API_URL from '../api/config';
 
 type ImageUploaderProps = {
     onImageUploaded: (imageUrl: string) => void;
@@ -20,7 +21,7 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
         if (existingImageUrl) {
             const fullUrl = existingImageUrl.startsWith('http')
                 ? existingImageUrl
-                : `http://127.0.0.1:8000${existingImageUrl}`;
+                : `${API_URL}${existingImageUrl}`;
             setPreviewUrl(fullUrl);
         }
     }, [existingImageUrl]);
@@ -44,7 +45,7 @@ function ImageUploader({ onImageUploaded, label = 'Upload Image', existingImageU
             const formData = new FormData();
             formData.append('image', file);
 
-            const response = await axios.post('http://127.0.0.1:8000/api/upload/image/', formData, {
+            const response = await axios.post(`${API_URL}api/upload/image/`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }

@@ -3,6 +3,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './ArticleCards.css';
 import '../pages/ArticlePage.css';
+// src/api/config.js
+import API_URL from '../api/config';
 
 type Article = {
     imagen_url: string;
@@ -48,12 +50,12 @@ export default function ArticleCards() {
     useEffect(() => {
         setLoading(true);
 
-        let apiUrl = 'http://127.0.0.1:8000/api/articles/';
+        let apiUrl = `${API_URL}api/articles/`;
 
         if (isTagView) {
-            apiUrl = `http://127.0.0.1:8000/api/articles/tag/${tagId}/`;
+            apiUrl = `${API_URL}api/articles/tag/${tagId}/`;
         } else if (isAuthorView) {
-            apiUrl = `http://127.0.0.1:8000/api/articles/author/${authorId}/`;
+            apiUrl = `${API_URL}api/articles/author/${authorId}/`;
         }
 
         // Add pagination parameters
@@ -183,7 +185,7 @@ export default function ArticleCards() {
                                         <strong>Autor:</strong>{' '}
                                         <button
                                             className="author-button"
-                                            onClick={(e) => handleAuthorClick(e, article.autor, article.autor_id)}
+                                            onClick={(e) => handleAuthorClick(e, article.autor, article.autor_id || "")}
                                         >
                                             {article.autor || 'Desconocido'}
                                         </button>
