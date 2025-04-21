@@ -50,12 +50,12 @@ export default function ArticleCards() {
     useEffect(() => {
         setLoading(true);
 
-        let apiUrl = `${API_URL}/api/articles/`;
+        let apiUrl = `${API_URL}api/articles/`;
 
         if (isTagView) {
-            apiUrl = `${API_URL}/api/articles/tag/${tagId}/`;
+            apiUrl = `${API_URL}api/articles/tag/${tagId}/`;
         } else if (isAuthorView) {
-            apiUrl = `${API_URL}/api/articles/author/${authorId}/`;
+            apiUrl = `${API_URL}api/articles/author/${authorId}/`;
         }
 
         // Add pagination parameters
