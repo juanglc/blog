@@ -1,5 +1,5 @@
 # backend/serializers/user_requests.py
-def serialize_full_requests(request, users_collection):
+def serialize_full_user_requests(request, users_collection):
     print(f"[DEBUG] ========= SERIALIZANDO REQUEST =========")
     print(f"[DEBUG] Artículo recibido: {request}")
 

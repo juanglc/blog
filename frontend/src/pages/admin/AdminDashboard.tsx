@@ -7,7 +7,7 @@ import './AdminDashboard.css';
 import UserProfileBadge from '../../components/userInfo/UserProfileBadge';
 
 interface User {
-    _id: string;
+    id: string;
     nombre: string;
     correo: string;
     telefono: string;
@@ -45,7 +45,9 @@ const AdminDashboard = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            setUsers(response.data);
+            console.log('API Response:', response.data); // Debugging
+            const usersData = Array.isArray(response.data.users) ? response.data.users : [];
+            setUsers(usersData);
             setLoading(false);
         } catch (err) {
             setError('Failed to load users');
@@ -60,14 +62,14 @@ const AdminDashboard = () => {
             const token = localStorage.getItem('token');
 
             await axios.put(
-                `${API_URL}/api/users/${userId}/`,
+                `${API_URL}/api/users/update/${userId}/`,
                 { rol: newRole },
                 { headers: { Authorization: `Bearer ${token}` }}
             );
 
             // Update local state
             setUsers(users.map(user => {
-                if (user._id === userId) {
+                if (user.id === userId) {
                     return { ...user, rol: newRole };
                 }
                 return user;
@@ -116,35 +118,35 @@ const AdminDashboard = () => {
                         </thead>
                         <tbody>
                         {users.map(user => (
-                            <tr key={user._id}>
+                            <tr key={user.id}>
                                 <td>{user.username}</td>
                                 <td>{user.nombre}</td>
                                 <td>{user.correo}</td>
                                 <td>{user.telefono}</td>
                                 <td>{user.rol}</td>
                                 <td className="role-actions">
-                                    {updateStatus && updateStatus.userId === user._id && (
+                                    {updateStatus && updateStatus.userId === user.id && (
                                         <div className={`status-message ${updateStatus.isError ? 'error' : 'success'}`}>
                                             {updateStatus.message}
                                         </div>
                                     )}
                                     <button
                                         className={`role-button ${user.rol === 'lector' ? 'active' : ''}`}
-                                        onClick={() => updateUserRole(user._id, 'lector')}
+                                        onClick={() => updateUserRole(user.id, 'lector')}
                                         disabled={user.rol === 'lector'}
                                     >
                                         Reader
                                     </button>
                                     <button
                                         className={`role-button ${user.rol === 'escritor' ? 'active' : ''}`}
-                                        onClick={() => updateUserRole(user._id, 'escritor')}
+                                        onClick={() => updateUserRole(user.id, 'escritor')}
                                         disabled={user.rol === 'escritor'}
                                     >
                                         Writer
                                     </button>
                                     <button
                                         className={`role-button ${user.rol === 'admin' ? 'active' : ''}`}
-                                        onClick={() => updateUserRole(user._id, 'admin')}
+                                        onClick={() => updateUserRole(user.id, 'admin')}
                                         disabled={user.rol === 'admin'}
                                     >
                                         Admin

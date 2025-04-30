@@ -77,7 +77,7 @@ export default function ArticleCards() {
 
                 setLoading(false);
             })
-            .catch(err => {
+            .catch(() => {
                 setError('Failed to load articles');
                 setLoading(false);
             });
