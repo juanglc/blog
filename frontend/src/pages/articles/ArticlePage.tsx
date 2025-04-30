@@ -15,6 +15,7 @@ type Article = {
     fecha_creacion: string;
     descripcion: string;
     tags: Array<{
+        _id: string;
         nombre: string;
         descripcion: string;
     }>;
@@ -124,7 +125,7 @@ export default function ArticlePage() {
                 <strong>Autor:</strong>
                 <button
                     className="author-button"
-                    onClick={() => navigate(`/authors/${article.autor_id || article.autor}`)}
+                    onClick={() => navigate(`/articles/author/${article.autor_id || article.autor}`)}
                 >
                     {article.autor || 'Desconocido'}
                 </button>
@@ -140,11 +141,11 @@ export default function ArticlePage() {
             <div className="article-tags">
                 <h3>Tags:</h3>
                 <div className="tags-container">
-                    {article.tags.map((tag, index) => (
+                    {article.tags?.map(tag => (
                         <button
-                            key={index}
+                            key={tag._id}
                             className="tag-button"
-                            onClick={() => navigate(`/tags/${tag.nombre}`)}
+                            onClick={() => navigate(`/articles/tag/${tag._id}`)} // Navigate using tag ID
                         >
                             {tag.nombre}
                         </button>

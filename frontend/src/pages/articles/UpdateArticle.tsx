@@ -157,15 +157,13 @@ export default function UpdateArticle() {
 
         if (checked) {
             setSelectedTags(prev => [...prev, value]);
-            addDebug(`Added tag ID: ${value}`);
+            addDebug(`Added tag: ${value}`);
+            if (formErrors.tags) {
+                setFormErrors({ ...formErrors, tags: undefined });
+            }
         } else {
-            setSelectedTags(prev => prev.filter(tagId => tagId !== value));
-            addDebug(`Removed tag ID: ${value}`);
-        }
-
-        // Clear tag error if any tags are selected
-        if (formErrors.tags) {
-            setFormErrors(prev => ({ ...prev, tags: undefined }));
+            setSelectedTags(prev => prev.filter(tag => tag !== value));
+            addDebug(`Removed tag: ${value}`);
         }
     };
 
@@ -289,64 +287,49 @@ export default function UpdateArticle() {
 
         if (!id) return;
 
-        // Validate form before submitting
+        setError('');
+        addDebug("Starting submission validation");
+
         if (!validateForm()) {
             addDebug("Form validation failed");
-            setMessage({text: "Please fill in all required fields", type: "error"});
+            setMessage({ text: "Please fill in all required fields", type: "error" });
             return;
         }
 
         setSubmitting(true);
-        addDebug("Starting submission");
+        addDebug("Form validated, starting submission");
 
         try {
-            // Convert selected tag IDs to tag objects
-            const tagsList = selectedTags.map(tagId => {
-                const foundTag = allTags.find(tag => tag._id === tagId);
-                return {
-                    nombre: foundTag?.nombre || '',
-                    descripcion: foundTag?.descripcion || ''
-                };
-            });
-
-            addDebug(`Prepared tags: ${JSON.stringify(tagsList)}`);
-
-            const updateData = {
-                ...formData,
-                tags: tagsList,
+            const articleData = {
+                titulo: formData.titulo,
+                contenido_markdown: formData.contenido_markdown,
+                imagen_url: formData.imagen_url,
+                tags: selectedTags, // Send only the tag IDs
+                descripcion: formData.descripcion,
             };
 
-            addDebug(`Sending update data: ${JSON.stringify(updateData)}`);
-
+            addDebug(`Sending article data: ${JSON.stringify(articleData)}`);
             const response = await fetch(`${API_URL}/api/articles/${id}/update/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(updateData),
+                body: JSON.stringify(articleData),
             });
 
             const result = await response.json();
             addDebug(`Response received: ${JSON.stringify(result)}`);
 
             if (response.ok) {
-                setMessage({text: `Article updated successfully! Updated fields: ${result.updated_fields?.join(', ')}`, type: 'success'});
-
-                if (result.fecha_actualizacion) {
-                    addDebug(`Article updated with fecha_actualizacion: ${result.fecha_actualizacion}`);
-                }
-
-                // Navigate back after a brief delay
-                setTimeout(() => {
-                    navigate(`/articles/${id}`);
-                }, 3000);
+                setMessage({ text: "Article updated successfully!", type: "success" });
+                navigate(`/articles/${id}`);
             } else {
-                setMessage({text: `Error: ${result.error || 'Unknown error'}`, type: 'error'});
+                setMessage({ text: `Error: ${result.error || 'Unknown error'}`, type: "error" });
             }
-        } catch (error) {
-            console.error('Error updating article:', error);
-            addDebug(`Error during update: ${error}`);
-            setMessage({text: 'Failed to update article. Please try again.', type: 'error'});
+        } catch (err) {
+            console.error('Error updating article:', err);
+            setError('Failed to update article');
+            addDebug(`Error updating article: ${err}`);
         } finally {
             setSubmitting(false);
         }

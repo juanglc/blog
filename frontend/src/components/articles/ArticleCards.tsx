@@ -16,8 +16,8 @@ type Article = {
     descripcion: string;
     id: string;
     tags: Array<{
+        _id: string;
         nombre: string;
-        descripcion: string;
     }>;
 };
 
@@ -35,6 +35,7 @@ export default function ArticleCards() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [authorName, setAuthorName] = useState<string>('');
+    const [tagName, setTagName] = useState<string>('');
     const [pagination, setPagination] = useState<PaginationData>({
         total: 0,
         page: 1,
@@ -57,12 +58,19 @@ export default function ArticleCards() {
         let apiUrl = `${API_URL}/api/articles/`;
 
         if (isTagView) {
-            apiUrl = `${API_URL}/api/articles/tag/${tagId}/`;
+            apiUrl = `${API_URL}/api/articles/tag/${tagId}/`; // Cambia la URL para filtrar por tagId
+            axios.get(`${API_URL}/api/tags/${tagId}`)
+                .then(res => {
+                    setTagName(res.data.nombre); // Suponiendo que la respuesta tiene campo 'nombre'
+                })
+                .catch(() => {
+                    setTagName('Desconocido');
+                });
         } else if (isAuthorView) {
             apiUrl = `${API_URL}/api/articles/author/${authorId}/`;
         }
 
-        // Add pagination parameters
+        // Agrega parámetros de paginación
         apiUrl += `?page=${currentPage}&per_page=9`;
 
         axios.get(apiUrl)
@@ -70,7 +78,6 @@ export default function ArticleCards() {
                 setArticles(res.data.articles);
                 setPagination(res.data.pagination);
 
-                // Get the author name from the first article if it exists
                 if (isAuthorView && res.data.articles.length > 0) {
                     setAuthorName(res.data.articles[0].autor || 'Desconocido');
                 }
@@ -87,14 +94,14 @@ export default function ArticleCards() {
         navigate(`/articles/${id}`);
     };
 
-    const handleTagClick = (e: React.MouseEvent, tagName: string) => {
+    const handleTagClick = (e: React.MouseEvent, tagId: string) => {
         e.stopPropagation(); // Prevent card click event
-        navigate(`/tags/${tagName}`);
+        navigate(`/articles/tag/${tagId}`); // Use tagId (_id) instead of tagName (nombre)
     };
 
     const handleAuthorClick = (e: React.MouseEvent, author: string, authorId: string) => {
         e.stopPropagation(); // Prevent card click event
-        navigate(`/authors/${authorId || author}`);
+        navigate(`/articles/author/${authorId || author}`);
     };
 
     const handlePageChange = (page: number) => {
@@ -144,9 +151,9 @@ export default function ArticleCards() {
 
     let pageTitle = "Artículos Recientes";
     if (isTagView) {
-        pageTitle = `Artículos con tag: ${tagId}`;
+        pageTitle = `Artículos con Tag ${tagName || 'Cargando...'}`;
     } else if (isAuthorView) {
-        pageTitle = `Artículos de: ${authorName || 'Cargando...'}`;
+            pageTitle = `Artículos de: ${authorName || 'Cargando...'}`;
     }
 
     return (
@@ -188,11 +195,11 @@ export default function ArticleCards() {
                                     <p><strong>Fecha:</strong> {new Date(article.fecha_creacion).toLocaleDateString()}</p>
                                 </div>
                                 <div className="article-tags-small">
-                                    {article.tags.map((tag, idx) => (
+                                    {article.tags.map((tag) => (
                                         <button
-                                            key={idx}
+                                            key={tag._id}
                                             className="tag-button"
-                                            onClick={(e) => handleTagClick(e, tag.nombre)}
+                                            onClick={(e) => handleTagClick(e, tag._id)} // Pass _id here
                                         >
                                             {tag.nombre}
                                         </button>

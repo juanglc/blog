@@ -205,20 +205,8 @@ export default function NewArticle() {
         setError('');
         addDebug("Starting submission validation");
 
-        // Validate form before submitting
         if (!validateForm()) {
             addDebug("Form validation failed");
-            // Find first error field and focus
-            const errorFields = ['titulo', 'descripcion', 'contenido_markdown', 'imagen_url', 'tags'];
-            for (const field of errorFields) {
-                if (formErrors[field as keyof FormErrors]) {
-                    const element = document.getElementById(field);
-                    if (element) {
-                        element.focus();
-                        break;
-                    }
-                }
-            }
             return;
         }
 
@@ -226,41 +214,20 @@ export default function NewArticle() {
         addDebug("Form validated, starting submission");
 
         try {
-            // Convert selected tag names to tag objects
-            const tagsList = selectedTags.map(tagId => {
-                const foundTag = availableTags.find(tag => tag._id === tagId);
-                return {
-                    nombre: foundTag?.nombre || '',
-                    descripcion: foundTag?.descripcion || ''
-                };
-            });
-
-            addDebug(`Prepared tags: ${JSON.stringify(tagsList)}`);
-
             const articleData = {
                 titulo: title,
                 contenido_markdown: content,
                 imagen_url: imageUrl,
-                tags: tagsList,
+                tags: selectedTags, // Enviar solo los IDs de los tags
                 autor_id: 'udf5a934c',
                 descripcion: description,
                 fecha_creacion: new Date().toISOString()
             };
 
             addDebug(`Sending article data: ${JSON.stringify(articleData)}`);
-            console.log('Sending POST request with data:', articleData);
+            const response = await axios.post(`${API_URL}/api/articles/create/`, articleData);
 
-            // Use the create endpoint with POST
-            const response = await axios.post(
-                `${API_URL}/api/articles/create/`,
-                articleData
-            );
-
-            console.log('Response received:', response);
-            console.log('Created article with ID:', response.data.id);
             addDebug(`Article created with ID: ${response.data.id}`);
-
-            // Navigate to the newly created article
             navigate(`/articles/${response.data.id}`);
         } catch (err) {
             console.error('Error creating article:', err);
