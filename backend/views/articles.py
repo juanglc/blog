@@ -55,25 +55,16 @@ def get_all_articles(request):
 @api_view(['GET'])
 def get_article_by_tag(request, tag_id):
     try:
-        # Get page number from query params, default to 1
         page = int(request.query_params.get('page', 1))
-        # Get items per page from query params, default to 9
         per_page = int(request.query_params.get('per_page', 9))
-
-        # Calculate skip value
         skip = (page - 1) * per_page
 
-        # Count total matching articles
-        total_articles = db.articles.count_documents({"tags.nombre": tag_id})
-
-        # Find articles sorted by date
-        articles = list(db.articles.find({"tags.nombre": tag_id})
-                        .sort('fecha_creacion', -1)
-                        .skip(skip)
-                        .limit(per_page))
+        # Find articles with the given tag
+        articles = list(db.articles.find({"tags": tag_id}).sort('fecha_creacion', -1).skip(skip).limit(per_page))
+        total_articles = db.articles.count_documents({"tags": tag_id})
 
         if not articles:
-            return JsonResponse({
+            return Response({
                 "articles": [],
                 "pagination": {
                     "total": total_articles,
@@ -81,12 +72,13 @@ def get_article_by_tag(request, tag_id):
                     "per_page": per_page,
                     "pages": (total_articles + per_page - 1) // per_page
                 }
-            }, safe=False)
+            })
 
-        enriched = [serialize_article_full(article, db.users, db.tags) for article in articles]
+        # Enrich articles with author and tag information
+        enriched_articles = [serialize_article_full(article, db.users, db.tags) for article in articles]
 
         return Response({
-            "articles": enriched,
+            "articles": enriched_articles,
             "pagination": {
                 "total": total_articles,
                 "page": page,
