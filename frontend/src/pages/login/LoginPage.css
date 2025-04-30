@@ -1,0 +1,138 @@
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--color-base-100);
+    padding: 20px;
+}
+
+.login-form-wrapper {
+    background-color: var(--color-base-200);
+    border-radius: var(--radius-box);
+    padding: 30px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, var(--depth));
+}
+
+.login-form-wrapper h1 {
+    text-align: center;
+    margin-bottom: 24px;
+    color: var(--color-base-content);
+}
+
+.login-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--color-base-content);
+    font-size: 1rem;
+    width: 100%;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: var(--border) solid var(--color-neutral);
+    background-color: var(--color-base-300);
+    color: var(--color-base-content);
+    border-radius: var(--radius-field);
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.password-input-container {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-container input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--color-neutral-content);
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.password-toggle:hover {
+    color: var(--color-accent);
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.error-message {
+    background-color: var(--color-error);
+    color: var(--color-error-content);
+    padding: 10px;
+    border-radius: var(--radius-field);
+    margin-bottom: 20px;
+    text-align: center;
+    border: var(--border) solid var(--color-error-content);
+    width: 100%;
+}
+
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+    border: none;
+    border-radius: var(--radius-field);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.login-button:hover {
+    background-color: var(--color-secondary);
+}
+
+.login-button:disabled {
+    background-color: var(--color-neutral);
+    cursor: not-allowed;
+}
+
+.additional-options {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--color-neutral-content);
+    width: 100%;
+}
+
+.additional-options a {
+    color: var(--color-info);
+    text-decoration: none;
+}
+
+.additional-options a:hover {
+    text-decoration: underline;
+    color: var(--color-info-content);
+}
+
+.login-form {
+    width: 100%;
+}

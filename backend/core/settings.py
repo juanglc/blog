@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'storages',
+    'authentication',
 ]
 
 # AWS S3 settings
@@ -145,8 +146,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "https://blog-xi-five-20.vercel.app/",
+    "https://blog-xi-five-20.vercel.app",
     "http://localhost:5173",
+    "http://localhost:8000",
 ]
 
 # Additional CORS settings
@@ -174,6 +176,8 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://blog-xi-five-20.vercel.app/",
     "https://blog-api-putk.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:8000",
 ]
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

@@ -1,8 +1,3 @@
-# backend/serializers/articles.py
-from bson import ObjectId
-
-# In serializers/articles.py
-# In serializers/articles.py
 def serialize_article_full(article, users_collection, tags_collection):
     print("[DEBUG] ====== SERIALIZANDO ARTÍCULO ======")
     print(f"[DEBUG] Artículo recibido: {article}")
