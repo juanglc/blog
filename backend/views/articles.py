@@ -183,10 +183,10 @@ def create_articles(request):
             "tags": data.get("tags", []),
             "autor_id": data.get("autor_id"),
             "fecha_creacion": data.get("fecha_creacion", datetime.now().isoformat()),
-            "descripcion": data.get("descripcion")
+            "descripcion": datetime.utcnow()
         }
 
-        result = db.articles.insert_one(article)
+        db.articles.insert_one(article)
 
         return Response({
             "message": "Article created successfully",

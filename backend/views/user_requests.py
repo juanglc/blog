@@ -1,4 +1,6 @@
 # backend/views/requests.py
+import datetime
+
 from pymongo import MongoClient
 from django.conf import settings
 from django.http import JsonResponse
@@ -185,3 +187,66 @@ def get_approved_user_requests(request):
     except Exception as e:
         print(f"[ERROR] Error al obtener las solicitudes aprobadas: {e}")
         return JsonResponse({"error": "Error al obtener las solicitudes aprobadas"}, status=500)
+
+@api_view(['POST'])
+def create_user_request(request, user_id):
+    try:
+        data = request.data
+        print(f"[DEBUG] Datos recibidos para crear una solicitud de usuario: {data}")
+
+        latest_request = db.user_requests.find_one(
+            {"_id": {"$regex": "^u\\d+$"}},
+            sort=[("_id", -1)]
+        )
+
+        if latest_request:
+            latest_id = latest_request["_id"]
+            next_num = int(latest_id[1:]) + 1
+        else:
+            next_num = 1
+
+        new_request = {
+            "_id": f"req_user_{next_num}",
+            "user_id": user_id,
+            "rol_actual": data.get("rol_actual", ""),
+            "rol_deseado": data.get("rol_deseado", ""),
+            "estado": "pendiente",
+            "fecha": datetime.datetime.utcnow()
+        }
+
+        db.user_requests.insert_one(new_request)
+        return JsonResponse({"message": "Solicitud creada exitosamente"}, status=201)
+    except Exception as e:
+        print(f"[ERROR] Error al crear la solicitud de usuario: {e}")
+        return JsonResponse({"error": "Error al crear la solicitud"}, status=500)
+
+@api_view(['PUT'])
+def deny_request(request, request_id):
+    try:
+        db.user_requests.update_one(
+            {"_id": request_id},
+            {"$set": {"estado": "denegado"}}
+        )
+        return JsonResponse({"message": "Solicitud denegada exitosamente"}, status=200)
+    except Exception as e:
+        print(f"[ERROR] Error al denegar la solicitud: {e}")
+        return JsonResponse({"error": "Error al denegar la solicitud"}, status=500)
+
+@api_view(['PUT'])
+def approve_request(request, request_id):
+    try:
+        db.user_requests.update_one(
+            {"_id": request_id},
+            {"$set": {"estado": "aprobado"}}
+        )
+        data = request.data
+        user_id = data.get("autor_id")
+        new_role = data.get("rol_deseado")
+        db.users.update_one(
+            {"_id": user_id},
+            {"$set": {"rol": new_role}}
+        )
+        return JsonResponse({"message": "Solicitud aprobada exitosamente"}, status=200)
+    except Exception as e:
+        print(f"[ERROR] Error al aprobar la solicitud: {e}")
+        return JsonResponse({"error": "Error al aprobar la solicitud"}, status=500)

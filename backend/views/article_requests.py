@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from serializers.article_requests import serialize_full_article_requests
-
+from datetime import datetime
 client = MongoClient(settings.MONGO_URI)
 db = client["blog_db"]
 
@@ -179,3 +179,29 @@ def get_approved_article_requests(request):
     except Exception as e:
         print(f"[ERROR] Error al obtener las solicitudes aprobadas: {e}")
         return JsonResponse({"error": "Error al obtener las solicitudes aprobadas"}, status=500)
+
+@api_view(['PUT'])
+def approve_article_request(request, request_id):
+    try:
+        db.article_requests.update_one(
+            {"_id": request_id},
+            {"$set": {"estado": "aprobado"}}
+        )
+        return JsonResponse({"message": "Solicitud aprobada exitosamente", "tipo": f''}, status=200)
+
+    except Exception as e:
+        print(f"[ERROR] Error al aprobar la solicitud: {e}")
+        return JsonResponse({"error": "Error al aprobar la solicitud"}, status=500)
+
+@api_view(['PUT'])
+def reject_article_request(request, request_id):
+    try:
+        db.article_requests.update_one(
+            {"_id": request_id},
+            {"$set": {"estado": "denegado"}}
+        )
+        return JsonResponse({"message": "Solicitud rechazada exitosamente"}, status=200)
+
+    except Exception as e:
+        print(f"[ERROR] Error al rechazar la solicitud: {e}")
+        return JsonResponse({"error": "Error al rechazar la solicitud"}, status=500)
