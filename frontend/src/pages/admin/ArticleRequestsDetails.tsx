@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../api/config';
 import './ArticleRequestsDetails.css';
+import UserProfileBadge from '../../components/userInfo/UserProfileBadge';
 
 const ArticleRequestDetails = () => {
     const { requestId } = useParams<{ requestId: string }>();
@@ -54,6 +55,14 @@ const ArticleRequestDetails = () => {
         }
     };
 
+    const handleViewOriginalArticle = () => {
+        if (request?.pending_article?.id_articulo_original) {
+            navigate(`/articles/${request.pending_article.id_articulo_original}`, {
+                state: { fromAdmin: true }, // Pass state to indicate navigation from admin
+            });
+        }
+    };
+
     const handleApprove = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -70,26 +79,38 @@ const ArticleRequestDetails = () => {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            await axios.post(
-                `${API_URL}/api/articles/create/`,
-                request.pending_article,
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+            if(request.tipo === 'nuevo')
+            {
+                await axios.post(
+                    `${API_URL}/api/articles/create/`,
+                    request.pending_article,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+            }
+            else
+            {
+                await axios.put(
+                    `${API_URL}/api/articles/${request.pending_article.id_articulo_original}/update/`,
+                    request.pending_article,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+            }
+            await axios.put(
+                `${API_URL}/api/pending_articles/delete/${request.pending_article._id}/`,
+                { headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}` } }
             );
-            await axios.delete(
-                `${API_URL}/api/pending_articles/delete/${request.id_articulo_nuevo}/`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-
             navigate('/admin/article-requests');
         } catch (err) {
             console.error('Error creating or updating article:', err);
@@ -104,6 +125,15 @@ const ArticleRequestDetails = () => {
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
+            await axios.put(
+                `${API_URL}/api/pending_articles/${request.pending_article._id}/to_draft/`,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
             navigate('/admin/article-requests');
         } catch (err) {
             console.error('Error rejecting request:', err);
@@ -115,6 +145,7 @@ const ArticleRequestDetails = () => {
 
     return (
         <div className="article-request-details">
+            <UserProfileBadge/>
             <h1>Request Details</h1>
             <div className="request-details">
                 {Object.entries(request).map(([key, value]) => {
@@ -138,7 +169,15 @@ const ArticleRequestDetails = () => {
                     View Pending Article
                 </button>
             )}
-            <hr/>
+            {request?.tipo === 'update' && request?.pending_article?.id_articulo_original && (
+                <button
+                    className="view-original-article-button"
+                    onClick={handleViewOriginalArticle}
+                >
+                    View Original Article
+                </button>
+            )}
+            <hr />
             <div className="action-buttons">
                 <button
                     onClick={handleApprove}

@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import './ArticlePage.css';
-import {API_URL} from "../../api/config.ts";
+import { API_URL } from "../../api/config.ts";
 import UserProfileBadge from "../../components/userInfo/UserProfileBadge";
 
 type Article = {
@@ -25,6 +25,7 @@ type Article = {
 export default function ArticlePage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const [article, setArticle] = useState<Article | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -38,6 +39,9 @@ export default function ArticlePage() {
     // Get user role from localStorage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userRole = user.rol;
+
+    // Check if the page was accessed from admin
+    const isFromAdmin = location.state?.fromAdmin || false;
 
     useEffect(() => {
         if (!id) {
@@ -154,14 +158,14 @@ export default function ArticlePage() {
             </div>
 
             {/* Conditionally render buttons for admin or escritor */}
-            {(userRole === 'admin' || userRole === 'escritor') && (
+            {!isFromAdmin && (userRole === 'admin' || userRole === 'escritor') && (
                 <div className="article-actions" style={{ marginTop: '20px' }}>
                     <button
                         onClick={() => navigate(`/articles/update/${id}`)}
                         className="update-button">
                         Update Article
                     </button>
-                    <hr/>
+                    <hr />
                     <button
                         onClick={openDeleteModal}
                         className="delete-button">
@@ -169,10 +173,16 @@ export default function ArticlePage() {
                     </button>
                 </div>
             )}
-            <hr/>
+            <hr />
             <div className="back-button-container">
                 <button
-                    onClick={() => navigate('/articles')}
+                    onClick={() => {
+                        if (isFromAdmin) {
+                            navigate(-1);
+                        } else {
+                            navigate('/articles');
+                        }
+                    }}
                     className="back-button">
                     Volver
                 </button>

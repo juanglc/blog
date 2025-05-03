@@ -218,10 +218,14 @@ def update_article(request, article_id):
         if 'imagen_url' in data and data['imagen_url'] != article.get('imagen_url'):
             updates['imagen_url'] = data['imagen_url']
             print(f"[DEBUG] Updating imagen_url: {data['imagen_url']}")
-        print(f"[DEBUG] Tags originales: {data['tags']} - tipo: {type(data['tags'])}")
-        # Don't compare with existing tags, just update them
-        updates['tags'] = data['tags']
-        print(f"[DEBUG] Updating tags directly: {data['tags']}")
+
+        if 'tags' in data:
+            tags = data.get("tags", [])
+            if not all(isinstance(tag, dict) and "_id" in tag for tag in tags):
+                return Response({"error": "Tags must be an array of objects with an '_id' field"}, status=400)
+            tag_ids = [tag["_id"] for tag in tags]
+            updates['tags'] = tag_ids
+            print(f"[DEBUG] Updating tags: {tag_ids}")
 
         if 'descripcion' in data and data['descripcion'] != article.get('descripcion'):
             updates['descripcion'] = data['descripcion']

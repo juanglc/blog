@@ -11,7 +11,7 @@ from views.article_requests import get_all_article_requests, get_active_article_
 from views.drafts import get_all_drafts, get_draft_by_id, update_draft, delete_draft, push_draft
 from views.users import get_all_users, update_role, get_user_by_id
 from views.article_requests import get_all_article_requests, get_active_article_requests, get_rejected_article_requests, get_article_request_by_id, get_approved_article_requests, approve_article_request, reject_article_request
-from views.pending_articles import get_all_pending_articles_by_author, get_pending_article_by_id, create_pending_article, delete_pending_article
+from views.pending_articles import get_all_pending_articles_by_author, get_pending_article_by_id, create_pending_article, delete_pending_article, pending_to_draft
 
 
 # Create a router and register your viewsets
@@ -45,7 +45,8 @@ urlpatterns = [
     path("api/pending_articles/all/<str:autor_id>/", get_all_pending_articles_by_author),
     path("api/pending_articles/<str:pending_article_id>/", get_pending_article_by_id),
     path("api/pending_articles/create/", create_pending_article),
-    path("api/pending_articles/delete/<str:id>/", delete_pending_article)
+    path("api/pending_articles/delete/<str:pa_id>/", delete_pending_article),
+    path("api/pending_articles/<str:pa_id>/to_draft/", pending_to_draft),
     path("api/requests/articles/<str:request_id>/approve/", approve_article_request),
     path("api/requests/articles/<str:request_id>/reject/", reject_article_request),
     path("api/requests/articles/approved/", get_approved_article_requests),

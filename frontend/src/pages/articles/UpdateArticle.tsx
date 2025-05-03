@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import ImageUploader from '../../components/ImageUploader.tsx';
 import './ArticlePage.css';
 import {API_URL} from "../../api/config.ts";
+import UserProfileBadge from "../../components/userInfo/UserProfileBadge.tsx";
 
 type Tag = {
     nombre: string;
@@ -358,6 +359,7 @@ export default function UpdateArticle() {
 
     return (
         <div className="article-page">
+            <UserProfileBadge/>
             <h1>Update Article</h1>
 
             {message && (

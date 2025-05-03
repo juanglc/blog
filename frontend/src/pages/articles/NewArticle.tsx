@@ -5,6 +5,7 @@ import axios from 'axios';
 import ImageUploader from '../../components/ImageUploader.tsx';
 import './ArticlePage.css';
 import {API_URL} from "../../api/config.ts";
+import UserProfileBadge from "../../components/userInfo/UserProfileBadge.tsx";
 
 type Tag = {
     _id: string;
@@ -240,6 +241,7 @@ export default function NewArticle() {
 
     return (
         <div className="article-page">
+            <UserProfileBadge />
             <h1>Create New Article</h1>
 
             {error && <div className="message error">{error}</div>}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import './PendingArticle.css';
@@ -23,7 +23,6 @@ type PendingArticle = {
 export default function PendingArticle() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const location = useLocation();
     const [article, setArticle] = useState<PendingArticle | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -51,8 +50,7 @@ export default function PendingArticle() {
     }, [id]);
 
     const handleBack = () => {
-        const previousPath = location.state?.from || '/admin/article-requests';
-        navigate(previousPath);
+        navigate(-1);
     };
 
     if (loading) {

@@ -122,7 +122,7 @@ def create_pending_article(request):
         print(f"[ERROR] Error al crear el artículo pendiente: {e}")
         return JsonResponse({"error": "Error al crear el artículo pendiente"}, status=500)
 
-@api_view(['DELETE'])
+@api_view(['PUT'])
 def delete_pending_article(request, pa_id):
     try:
         # Attempt to find the pending article by ID
@@ -130,9 +130,23 @@ def delete_pending_article(request, pa_id):
         if not pending_article:
             return Response({"error": "Pending article not found"}, status=404)
 
-        # Delete the pending article
-        db.pending_articles.delete_one({"_id": pa_id})
+        # Update the estado field to "aprobado"
+        db.pending_articles.update_one({"_id": pa_id}, {"$set": {"estado": "aprobado"}})
         return Response({"message": "Pending article deleted successfully"}, status=200)
     except Exception as e:
         print(f"[ERROR] Error deleting pending article: {e}")
         return JsonResponse({"error": "Error deleting pending article"}, status=500)
+
+@api_view(['PUT'])
+def pending_to_draft(request, pa_id):
+    try:
+        pending_article = db.pending_articles.find_one({"_id": pa_id})
+        if not pending_article:
+            return Response({"error": "Pending article not found"}, status=404)
+
+        db.pending_articles.update_one({"_id": pa_id}, {"$set": {"borrador": True}})
+        return Response({"message": "Pending article updated to draft successfully"}, status=200)
+
+    except Exception as e:
+        print(f"[ERROR] Error updating pending article to draft: {e}")
+        return JsonResponse({"error": "Error updating pending article to draft"}, status=500)
