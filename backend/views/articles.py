@@ -150,13 +150,8 @@ def get_article_by_id(request, article_id):
 
 @api_view(['POST'])
 def create_articles(request):
-    """Create a new article"""
-    print("DEBUG: create_articles function called with POST method")
-
     try:
         data = request.data
-        print(f"[DEBUG] Received article data: {data}")
-
         required_fields = ['titulo', 'contenido_markdown', 'descripcion']
         for field in required_fields:
             if not data.get(field):
@@ -167,23 +162,24 @@ def create_articles(request):
             sort=[("_id", -1)]
         )
 
-        if latest_article:
-            latest_id = latest_article["_id"]
-            next_num = int(latest_id[1:]) + 1
-        else:
-            next_num = 1
-
+        next_num = int(latest_article["_id"][1:]) + 1 if latest_article else 1
         new_id = f"a{next_num:03d}"
+
+        # Extract only the `_id` from the tags array
+        tags = data.get("tags", [])
+        if not all(isinstance(tag, dict) and "_id" in tag for tag in tags):
+            return Response({"error": "Tags must be an array of objects with an '_id' field"}, status=400)
+        tag_ids = [tag["_id"] for tag in tags]
 
         article = {
             "_id": new_id,
             "titulo": data.get("titulo"),
             "contenido_markdown": data.get("contenido_markdown"),
             "imagen_url": data.get("imagen_url", ""),
-            "tags": data.get("tags", []),
+            "tags": tag_ids,  # Store only tag IDs
             "autor_id": data.get("autor_id"),
             "fecha_creacion": data.get("fecha_creacion", datetime.now().isoformat()),
-            "descripcion": datetime.utcnow()
+            "descripcion": data.get("descripcion", ""),
         }
 
         db.articles.insert_one(article)
@@ -194,7 +190,6 @@ def create_articles(request):
         }, status=201)
 
     except Exception as e:
-        print(f"[ERROR] Exception in create_articles: {e}")
         return Response({"error": str(e)}, status=500)
 
 # In views/articles.py

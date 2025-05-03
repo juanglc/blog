@@ -7,26 +7,30 @@ import ArticlePage from './pages/articles/ArticlePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import NewArticle from './pages/articles/NewArticle';
 import UpdateArticle from "./pages/articles/UpdateArticle.tsx";
+import PendingArticle from './pages/admin/PendingArticle';
 
 interface PrivateRouteProps {
     element: React.ReactNode;
-    requiredRoles?: string[]; // Permitir múltiples roles
+    requiredRoles?: string[]; // Allow multiple roles
 }
 
 const PrivateRoute = ({ element, requiredRoles }: PrivateRouteProps) => {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-    // Si no hay token, redirige a login
+    // Redirect to login if no token
     if (!token) return <Navigate to="/login" replace />;
 
-    // Si se especifican roles y el rol del usuario no está incluido, redirige
+    // Redirect if user role is not allowed
     if (requiredRoles && !requiredRoles.includes(user.rol)) {
         return <Navigate to="/articles" replace />;
     }
 
     return <>{element}</>;
 };
+
+import ArticleRequests from './pages/admin/ArticleRequests';
+import ArticleRequestDetails from './pages/admin/ArticleRequestsDetails';
 
 function App() {
     const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +53,15 @@ function App() {
                 {/* Admin routes */}
                 <Route path="/admin" element={
                     <PrivateRoute element={<AdminDashboard />} requiredRoles={['admin']} />
+                } />
+                <Route path="/admin/article-requests" element={
+                    <PrivateRoute element={<ArticleRequests />} requiredRoles={['admin']} />
+                } />
+                <Route path="/admin/article-requests/:requestId" element={
+                    <PrivateRoute element={<ArticleRequestDetails />} requiredRoles={['admin']} />
+                } />
+                <Route path="/admin/pending-article/:id" element={
+                    <PrivateRoute element={<PendingArticle />} requiredRoles={['admin']} />
                 } />
 
                 {/* Protected routes */}

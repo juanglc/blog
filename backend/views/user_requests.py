@@ -221,7 +221,7 @@ def create_user_request(request, user_id):
         return JsonResponse({"error": "Error al crear la solicitud"}, status=500)
 
 @api_view(['PUT'])
-def deny_request(request, request_id):
+def deny_user_request(request, request_id):
     try:
         db.user_requests.update_one(
             {"_id": request_id},
@@ -233,7 +233,7 @@ def deny_request(request, request_id):
         return JsonResponse({"error": "Error al denegar la solicitud"}, status=500)
 
 @api_view(['PUT'])
-def approve_request(request, request_id):
+def approve_user_request(request, request_id):
     try:
         db.user_requests.update_one(
             {"_id": request_id},

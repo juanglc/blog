@@ -121,3 +121,18 @@ def create_pending_article(request):
     except Exception as e:
         print(f"[ERROR] Error al crear el artículo pendiente: {e}")
         return JsonResponse({"error": "Error al crear el artículo pendiente"}, status=500)
+
+@api_view(['DELETE'])
+def delete_pending_article(request, pa_id):
+    try:
+        # Attempt to find the pending article by ID
+        pending_article = db.pending_articles.find_one({"_id": pa_id})
+        if not pending_article:
+            return Response({"error": "Pending article not found"}, status=404)
+
+        # Delete the pending article
+        db.pending_articles.delete_one({"_id": pa_id})
+        return Response({"message": "Pending article deleted successfully"}, status=200)
+    except Exception as e:
+        print(f"[ERROR] Error deleting pending article: {e}")
+        return JsonResponse({"error": "Error deleting pending article"}, status=500)

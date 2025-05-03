@@ -5,7 +5,6 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from serializers.article_requests import serialize_full_article_requests
-from datetime import datetime
 client = MongoClient(settings.MONGO_URI)
 db = client["blog_db"]
 
