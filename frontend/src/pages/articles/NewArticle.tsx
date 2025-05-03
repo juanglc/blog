@@ -215,12 +215,15 @@ export default function NewArticle() {
         addDebug("Form validated, starting submission");
 
         try {
+            // Transform selectedTags into an array of objects with an _id field
+            const formattedTags = selectedTags.map(tagId => ({ _id: tagId }));
+
             const articleData = {
                 titulo: title,
                 contenido_markdown: content,
                 imagen_url: imageUrl,
-                tags: selectedTags, // Enviar solo los IDs de los tags
-                autor_id: 'udf5a934c',
+                tags: formattedTags, // Send tags as objects with _id
+                autor_id: 'escritor',
                 descripcion: description,
                 fecha_creacion: new Date().toISOString()
             };

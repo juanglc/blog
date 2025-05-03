@@ -1,3 +1,5 @@
+import datetime
+
 from django.db.models.expressions import result
 from pymongo import MongoClient
 from django.conf import settings
@@ -92,7 +94,7 @@ def create_pending_article(request):
                 "imagen_url": data.get("imagen_url"),
                 "tags": data.get("tags"),
                 "autor_id": data.get("autor_id"),
-                "fecha_creacion": data.get("fecha_creacion"),
+                "fecha_creacion": datetime.datetime.now().isoformat(),
                 "tipo": data.get("tipo"),
                 "borrador": data.get("borrador", False)
             }
