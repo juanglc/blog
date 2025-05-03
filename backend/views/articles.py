@@ -178,7 +178,7 @@ def create_articles(request):
             "imagen_url": data.get("imagen_url", ""),
             "tags": tag_ids,  # Store only tag IDs
             "autor_id": data.get("autor_id"),
-            "fecha_creacion": data.get("fecha_creacion", datetime.now().isoformat()),
+            "fecha_creacion": datetime.now().isoformat(),
             "descripcion": data.get("descripcion", ""),
         }
 
