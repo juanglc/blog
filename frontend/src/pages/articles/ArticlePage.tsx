@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import './ArticlePage.css';
-import '../../pages/articles/ArticlePage.css';
 import { API_URL } from "../../api/config.ts";
 import UserProfileBadge from "../../components/userInfo/UserProfileBadge";
+import { Spinner } from '../../components/Spinner.tsx';
 import { CustomAlert } from "../../components/alerts/Alerts.tsx";
 import '../../App.css';
-import { Spinner } from '../../components/Spinner.tsx';
 
 type Article = {
     imagen_url: string;
@@ -17,86 +17,60 @@ type Article = {
     autor_id?: string;
     fecha_creacion: string;
     descripcion: string;
-    id: string;
     tags: Array<{
         _id: string;
         nombre: string;
+        descripcion: string;
     }>;
-};
-
-type PaginationData = {
-    total: number;
-    page: number;
-    per_page: number;
-    pages: number;
+    fecha_actualizacion: string;
 };
 
 type AlertType = "info" | "success" | "warning" | "error";
 
-export default function ArticleCards() {
-    const { tagId, authorId } = useParams<{ tagId?: string; authorId?: string }>();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const [articles, setArticles] = useState<Article[]>([]);
+export default function ArticlePage() {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [article, setArticle] = useState<Article | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [authorName, setAuthorName] = useState<string>('');
-    const [tagName, setTagName] = useState<string>('');
-    const [pagination, setPagination] = useState<PaginationData>({
-        total: 0,
-        page: 1,
-        per_page: 9,
-        pages: 0
-    });
-    const navigate = useNavigate();
+    const [alert, setAlert] = useState<{ message: string, type: AlertType } | null>(null);
+
+    // Add new states for delete confirmation
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [confirmationText, setConfirmationText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // Get user role from localStorage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userRole = user.rol;
+    const userId = user._id;
 
-    const isTagView = !!tagId;
-    const isAuthorView = !!authorId;
-    const currentPage = parseInt(searchParams.get('page') || '1');
-
-    const location = useLocation();
-    const [alert, setAlert] = useState<{ message: string, type: AlertType } | null>(null);
+    // Check if the page was accessed from admin
+    const isFromAdmin = location.state?.fromAdmin || false;
 
     useEffect(() => {
-        setLoading(true);
-
-        let apiUrl = `${API_URL}/api/articles/`;
-
-        if (isTagView) {
-            apiUrl = `${API_URL}/api/articles/tag/${tagId}/`;
-            axios.get(`${API_URL}/api/tags/${tagId}`)
-                .then(res => {
-                    setTagName(res.data.nombre);
-                })
-                .catch(() => {
-                    setTagName('Desconocido');
-                });
-        } else if (isAuthorView) {
-            apiUrl = `${API_URL}/api/articles/author/${authorId}/`;
+        if (!id) {
+            setError('Invalid article ID');
+            setLoading(false);
+            return;
         }
 
-        // Agrega parámetros de paginación
-        apiUrl += `?page=${currentPage}&per_page=9`;
-
-        axios.get(apiUrl)
-            .then(res => {
-                setArticles(res.data.articles);
-                setPagination(res.data.pagination);
-
-                if (isAuthorView && res.data.articles.length > 0) {
-                    setAuthorName(res.data.articles[0].autor || 'Desconocido');
-                }
-
+        const fetchArticle = async () => {
+            try {
+                const response = await axios.get(`${API_URL}/api/articles/${id}`);
+                setArticle(response.data);
+            } catch (err) {
+                console.error('Error fetching article:', err);
+                setError('Failed to load article');
+            } finally {
                 setLoading(false);
-            })
-            .catch(() => {
-                setError('Failed to load articles');
-                setLoading(false);
-            });
-    }, [tagId, authorId, isTagView, isAuthorView, currentPage]);
+            }
+        };
+
+        fetchArticle();
+    }, [id]);
 
     useEffect(() => {
         if (location.state?.message) {
@@ -105,98 +79,135 @@ export default function ArticleCards() {
                 type: (location.state.alertType as AlertType) || "info"
             });
 
-            // Limpiar el state para evitar que se repita al recargar
+            // Clear state to prevent message repetition on reload
             navigate(location.pathname, { replace: true });
         }
     }, [location.state, location.pathname, navigate]);
 
-    const handleCardClick = (id: string) => {
-        navigate(`/articles/${id}`);
+    const openDeleteModal = () => {
+        setShowDeleteModal(true);
+        // Focus on input field once modal is shown
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 100);
     };
 
-    const handleTagClick = (e: React.MouseEvent, tagId: string) => {
-        e.stopPropagation(); // Prevent card click event
+    const closeDeleteModal = () => {
+        setShowDeleteModal(false);
+        setConfirmationText('');
+    };
+
+    const handleDeleteArticle = async () => {
+        if (!article || confirmationText !== article.titulo) {
+            return;
+        }
+
+        setIsDeleting(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/api/articles/${id}/delete/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            navigate('/articles', {
+                state: {
+                    message: 'Artículo eliminado correctamente',
+                    alertType: 'success'
+                }
+            });
+        } catch (err) {
+            console.error('Error deleting article:', err);
+            setAlert({
+                message: 'Failed to delete article',
+                type: 'error'
+            });
+            setIsDeleting(false);
+            closeDeleteModal();
+        }
+    };
+
+    const handleTagClick = (tagId: string) => {
         navigate(`/articles/tag/${tagId}`);
     };
 
-    const handleAuthorClick = (e: React.MouseEvent, author: string, authorId: string) => {
-        e.stopPropagation(); // Prevent card click event
-        navigate(`/articles/author/${authorId || author}`);
-    };
-
-    const handlePageChange = (page: number) => {
-        setSearchParams({ page: page.toString() });
-    };
-
-    const getPageNumbers = () => {
-        const pageNumbers: (number | string)[] = [];
-        const { page, pages } = pagination;
-
-        pageNumbers.push(1);
-
-        let startPage = Math.max(2, page - 1);
-        let endPage = Math.min(pages - 1, page + 1);
-
-        if (startPage > 2) {
-            pageNumbers.push('...');
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            pageNumbers.push(i);
-        }
-
-        if (endPage < pages - 1) {
-            pageNumbers.push('...');
-        }
-
-        if (pages > 1) {
-            pageNumbers.push(pages);
-        }
-
-        return pageNumbers;
+    const handleAuthorClick = () => {
+        navigate(`/articles/author/${article?.autor_id || article?.autor}`);
     };
 
     if (loading) {
-        return <div className="article-section">
-            <UserProfileBadge />
-            <h2 className="article-title-main">Artículos</h2>
-            <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
-                <Spinner size="medium" color="var(--primary-color)" />
-            </div>
-            <div className="article-grid skeleton-grid">
-                {[1, 2, 3, 4, 5, 6].map((item) => (
-                    <div key={item} className="article-card loading-card">
-                        <div className="article-image-placeholder"></div>
-                        <div className="article-content">
-                            <div className="skeleton-line title-line"></div>
-                            <div className="skeleton-line"></div>
-                            <div className="skeleton-line"></div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>;
-    }
-
-    if (error) {
         return (
-            <div className="error-container">
-                <p>{error}</p>
-                <button className="back-button" onClick={() => navigate(-1)}>Go Back</button>
+            <div className="article-page">
+                <div className="user-wrapper">
+                    <UserProfileBadge />
+                </div>
+                <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
+                    <Spinner size="medium" color="var(--primary-color)" />
+                </div>
+
+                <h1 className="skeleton-line title-line"></h1>
+                <p className="skeleton-line description-line"></p>
+
+                <div className="article-image-placeholder"></div>
+
+                <div className="article-meta">
+                    <div className="skeleton-line meta-line"></div>
+                    <div className="skeleton-line meta-line"></div>
+                </div>
+
+                <div className="article-content">
+                    <div className="skeleton-line"></div>
+                    <div className="skeleton-line"></div>
+                    <div className="skeleton-line"></div>
+                    <div className="skeleton-line" style={{ width: '75%' }}></div>
+                    <div className="skeleton-line" style={{ width: '90%' }}></div>
+                    <div className="skeleton-line"></div>
+                </div>
+
+                <div className="article-tags">
+                    <h3 className="skeleton-line" style={{ width: '30%' }}></h3>
+                    <div className="tags-container">
+                        <span className="skeleton-tag"></span>
+                        <span className="skeleton-tag"></span>
+                        <span className="skeleton-tag"></span>
+                    </div>
+                </div>
             </div>
         );
     }
 
-    let pageTitle = "Artículos Recientes";
-    if (isTagView) {
-        pageTitle = `Artículos con Tag ${tagName || 'Cargando...'}`;
-    } else if (isAuthorView) {
-        pageTitle = `Artículos de: ${authorName || 'Cargando...'}`;
+    if (error) {
+        return (
+            <div className="article-page">
+                <div className={"user-wrapper"}>
+                    <UserProfileBadge />
+                </div>
+                <div className="error-container">
+                    <p>{error}</p>
+                    <button className="back-button" onClick={() => navigate(-1)}>Go Back</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!article) {
+        return (
+            <div className="article-page">
+                <div className={"user-wrapper"}>
+                    <UserProfileBadge />
+                </div>
+                <div className="error-container">
+                    <p>Article not found.</p>
+                    <button className="back-button" onClick={() => navigate(-1)}>Go Back</button>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div className="article-section">
-            <UserProfileBadge />
+        <div className="article-page">
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
 
             {alert && (
                 <div className="mt-2 mb-4 w-full">
@@ -209,124 +220,117 @@ export default function ArticleCards() {
                 </div>
             )}
 
-            <h2 className="article-title-main">{pageTitle}</h2>
+            <h1>{article.titulo}</h1>
+            <p className="article-description">{article.descripcion}</p>
 
-            {articles.length === 0 ? (
-                <p>No se encontraron artículos.</p>
-            ) : (
-                <div className="article-grid">
-                    {articles.map((article, index) => (
-                        <div
-                            key={index}
-                            className="article-card"
-                            onClick={() => handleCardClick(article.id)}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            <img
-                                src={article.imagen_url.startsWith('http')
-                                    ? article.imagen_url
-                                    : `${API_URL}${article.imagen_url}`}
-                                alt={article.titulo}
-                                className="article-image"
-                            />
-                            <div className="article-content">
-                                <h3 className="article-title">{article.titulo}</h3>
-                                <p className="article-description">{article.descripcion}</p>
-                                <div className="article-meta">
-                                    <p>
-                                        <strong>Autor:</strong>{' '}
-                                        <button
-                                            className="author-button"
-                                            onClick={(e) => handleAuthorClick(e, article.autor, article.autor_id || '')}
-                                        >
-                                            {article.autor || 'Desconocido'}
-                                        </button>
-                                    </p>
-                                    <p><strong>Fecha:</strong> {new Date(article.fecha_creacion).toLocaleDateString()}</p>
-                                </div>
-                                <div className="article-tags-small">
-                                    {article.tags.map((tag) => (
-                                        <button
-                                            key={tag._id}
-                                            className="tag-button"
-                                            onClick={(e) => handleTagClick(e, tag._id)}
-                                        >
-                                            {tag.nombre}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+            <img
+                src={article.imagen_url.startsWith('http')
+                    ? article.imagen_url
+                    : `${API_URL}${article.imagen_url}`}
+                alt={article.titulo}
+                className="article-image"
+            />
 
-            {pagination.pages > 1 && (
-                <div className="pagination">
+            <div className="article-meta">
+                <p>
+                    <strong>Autor:</strong>{' '}
                     <button
-                        onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={pagination.page === 1}
-                        className="pagination-button"
+                        className="author-button"
+                        onClick={handleAuthorClick}
                     >
-                        &laquo; Anterior
+                        {article.autor || 'Desconocido'}
                     </button>
+                </p>
+                <p><strong>Fecha:</strong> {new Date(article.fecha_creacion).toLocaleDateString()}</p>
 
-                    {getPageNumbers().map((pageNum, index) => (
-                        pageNum === '...' ? (
-                            <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
-                        ) : (
-                            <button
-                                key={`page-${pageNum}`}
-                                onClick={() => handlePageChange(Number(pageNum))}
-                                className={`pagination-button ${pagination.page === pageNum ? 'active' : ''}`}
-                            >
-                                {pageNum}
-                            </button>
-                        )
-                    ))}
+                {article.fecha_actualizacion && (
+                    <p><strong>Última actualización:</strong> {new Date(article.fecha_actualizacion).toLocaleDateString()}</p>
+                )}
+            </div>
 
-                    <button
-                        onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={pagination.page === pagination.pages}
-                        className="pagination-button"
-                    >
-                        Siguiente &raquo;
-                    </button>
-                </div>
-            )}
+            <div className="article-content">
+                <ReactMarkdown>{article.contenido_markdown}</ReactMarkdown>
+            </div>
 
-            {(isTagView || isAuthorView) ? (
-                <>
-                    <div>
+            <div className="article-tags">
+                <h3>Tags:</h3>
+                <div className="tags-container">
+                    {article.tags?.map(tag => (
                         <button
-                            onClick={() => navigate('/articles')}
-                            className="new-article-button"
-                            style={{ marginTop: '20px' }}
+                            key={tag._id}
+                            className="tag-button"
+                            onClick={() => handleTagClick(tag._id)}
                         >
-                            Volver a Artículos
+                            {tag.nombre}
                         </button>
-                    </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Conditionally render buttons for admin or escritor */}
+            {!isFromAdmin && (userRole === 'admin' || userRole === 'escritor' && userId === article.autor_id) && (
+
+                <div className="article-actions">
+
+                    <hr/>
+                    <button
+                        onClick={() => navigate(`/articles/update/${id}`)}
+                        className="update-button">
+                        Update Article
+                    </button>
                     <hr />
-                    <div>
-                        <button onClick={() => navigate(-1)} className="back-button">
-                            Volver
-                        </button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <hr />
-                    <div className="new-button">
-                        {(userRole === 'admin' || userRole === 'escritor') && (
+                    <button
+                        onClick={openDeleteModal}
+                        className="delete-button">
+                        Eliminar Artículo
+                    </button>
+                </div>
+            )}
+
+            <hr />
+
+            <div className="navigation-buttons">
+                <button
+                    onClick={() => {
+                        navigate(-1)
+                    }}
+                    className="back-button">
+                    Volver
+                </button>
+            </div>
+
+            {showDeleteModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h3>¿Estás seguro que quieres eliminar este artículo?</h3>
+                        <p>Esta acción no se puede deshacer.</p>
+                        <p>Escribe el título del artículo para confirmar:</p>
+                        <p className="article-title-confirmation">{article.titulo}</p>
+
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={confirmationText}
+                            onChange={(e) => setConfirmationText(e.target.value)}
+                            onPaste={(e) => e.preventDefault()}
+                            placeholder="Escribe el título exacto"
+                            className="confirmation-input"
+                        />
+
+                        <div className="modal-actions">
                             <button
-                                onClick={() => navigate('/articles/new')}
-                                className="new-article-button"
+                                onClick={handleDeleteArticle}
+                                disabled={confirmationText !== article.titulo || isDeleting}
+                                className={`delete-confirm-button ${confirmationText === article.titulo ? 'enabled' : ''}`}
                             >
-                                Nuevo Artículo
+                                {isDeleting ? 'Eliminando...' : 'Eliminar'}
                             </button>
-                        )}
+                            <button onClick={closeDeleteModal} className="cancel-button">
+                                Cancelar
+                            </button>
+                        </div>
                     </div>
-                </>
+                </div>
             )}
         </div>
     );

@@ -58,8 +58,9 @@ export default function PendingArticle() {
 
     if (loading) {
         return <div className="article-page">
-            <UserProfileBadge />
-            <h1>Article Review</h1>
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
             <div className="spinner-wrapper" style={{ margin: "20px auto" }}>
                 <Spinner size="medium" color="var(--primary-color)" />
             </div>
@@ -89,6 +90,9 @@ export default function PendingArticle() {
 
     return (
         <div className="pending-article-page">
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
             <h1>{article.titulo}</h1>
             <p>{article.descripcion}</p>
             <img

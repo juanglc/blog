@@ -6,12 +6,12 @@ from views.tags import TagViewSet
 from django.conf import settings
 from django.conf.urls.static import static
 from views.images import upload_image
-from views.user_requests import get_all_user_requests, get_active_user_requests, get_denied_user_requests, get_user_request_by_id, get_approved_user_requests, create_user_request, approve_user_request, deny_user_request, check_active_requests
+from views.user_requests import get_all_user_requests, get_active_user_requests, get_denied_user_requests, get_user_request_by_id, get_approved_user_requests, create_user_request, approve_user_request, deny_user_request, check_active_requests, get_active_user_requests_by_user, get_denied_user_requests_by_user, get_approved_user_requests_by_user, cancel_user_request
 from views.article_requests import get_all_article_requests, get_active_article_requests, get_rejected_article_requests, get_article_request_by_id, get_approved_article_requests
 from views.drafts import get_all_drafts, get_draft_by_id, update_draft, delete_draft, push_draft
 from views.users import get_all_users, update_role, get_user_by_id
-from views.article_requests import get_all_article_requests, get_active_article_requests, get_rejected_article_requests, get_article_request_by_id, get_approved_article_requests, approve_article_request, reject_article_request
-from views.pending_articles import get_all_pending_articles_by_author, get_pending_article_by_id, create_pending_article, delete_pending_article, pending_to_draft
+from views.article_requests import get_all_article_requests, get_active_article_requests, get_rejected_article_requests, get_article_request_by_id, get_approved_article_requests, approve_article_request, reject_article_request, create_article_request, get_active_article_requests_by_user, get_rejected_article_requests_by_user, get_approved_article_requests_by_user, set_new_id, cancel_article_request
+from views.pending_articles import get_all_pending_articles_by_author, get_pending_article_by_id, create_pending_article, delete_pending_article, pending_to_draft, check_pending_update
 
 
 # Create a router and register your viewsets
@@ -30,7 +30,6 @@ urlpatterns = [
     path("api/articles/get/author/<str:article_id>/", get_author_by_article),
     path("api/articles/author/<str:author_id>/", get_article_by_author),
     path("api/auth/", include("authentication.urls")),
-    path("api/requests/articles/", get_all_article_requests),
     path("api/requests/articles/active/", get_active_article_requests),
     path("api/requests/articles/rejected/", get_rejected_article_requests),
     path("api/requests/articles/approved/", get_approved_article_requests),
@@ -43,19 +42,30 @@ urlpatterns = [
     path("api/requests/users/create/<str:user_id>/", create_user_request),
     path("api/requests/users/<str:request_id>/approve/", approve_user_request),
     path("api/requests/users/<str:request_id>/reject/", deny_user_request),
+    path("api/requests/users/<str:request_id>/cancel/", cancel_user_request),
     path("api/requests/users/check/<str:user_id>/", check_active_requests),
+    path("api/requests/users/active/<str:user_id>/", get_active_user_requests_by_user),
+    path("api/requests/users/denied/<str:user_id>/", get_denied_user_requests_by_user),
+    path("api/requests/users/approved/<str:user_id>/", get_approved_user_requests_by_user),
     path("api/pending_articles/all/<str:autor_id>/", get_all_pending_articles_by_author),
     path("api/pending_articles/<str:pending_article_id>/", get_pending_article_by_id),
-    path("api/pending_articles/create/", create_pending_article),
+    path("api/pending_articles/", create_pending_article),
+    path("api/pending_articles/check/<str:pending_article_id>/", check_pending_update),
     path("api/pending_articles/delete/<str:pa_id>/", delete_pending_article),
     path("api/pending_articles/<str:pa_id>/to_draft/", pending_to_draft),
     path("api/requests/articles/<str:request_id>/approve/", approve_article_request),
     path("api/requests/articles/<str:request_id>/reject/", reject_article_request),
     path("api/requests/articles/approved/", get_approved_article_requests),
+    path("api/requests/articles/<str:request_id>/cancel/", cancel_article_request),
     path("api/requests/articles/rejected/", get_rejected_article_requests),
     path("api/requests/articles/active/", get_active_article_requests),
     path("api/requests/articles/<str:request_id>/", get_article_request_by_id),
+    path('api/requests/articles/<str:request_id>/set_new_id/', set_new_id, name='set_new_id'),
     path("api/requests/articles/all/", get_all_article_requests),
+    path("api/requests/articles/", create_article_request),
+    path("api/requests/articles/active/<str:user_id>/", get_active_article_requests_by_user),
+    path("api/requests/articles/rejected/<str:user_id>/", get_rejected_article_requests_by_user),
+    path("api/requests/articles/approved/<str:user_id>/", get_approved_article_requests_by_user),
     path("api/drafts/all/<str:user_id>/", get_all_drafts),
     path("api/drafts/<str:draft_id>/", get_draft_by_id),
     path("api/drafts/update/<str:draft_id>/", update_draft),

@@ -74,43 +74,67 @@ def create_pending_article(request):
         data = request.data
         print(f"[DEBUG] Datos recibidos para crear un artículo pendiente o borrador: {data}")
 
-        latest_article = db.pending_articles.find_one(
-            {"_id": {"$regex": "^a\\d+$"}},
-            sort=[("_id", -1)]
-        )
+        # Find all documents and determine the highest ID number
+        all_articles = list(db.pending_articles.find(
+            {"_id": {"$regex": "^pa\\d+$"}},
+            {"_id": 1}
+        ))
 
-        if latest_article:
-            latest_id = latest_article["_id"]
-            next_num = int(latest_id[1:]) + 1
-        else:
-            next_num = 1
+        # Extract numbers from IDs and find the maximum
+        max_num = 0
+        for article in all_articles:
+            try:
+                id_parts = article["_id"].split("pa")
+                if len(id_parts) >= 2:
+                    num = int(id_parts[1])
+                    if num > max_num:
+                        max_num = num
+            except (ValueError, IndexError):
+                continue
 
-        if (data['tipo']) == 'nuevo':
+        # Increment the maximum number found
+        next_num = max_num + 1
+
+        # Create the ID with pa prefix and formatted with leading zeros
+        article_id = f"pa{next_num:03d}"
+
+        # Transform tags from array of objects to array of strings
+        original_tags = data.get("tags", [])
+        transformed_tags = []
+        for tag in original_tags:
+            if isinstance(tag, dict) and "_id" in tag:
+                transformed_tags.append(tag["_id"])
+            elif isinstance(tag, str):
+                transformed_tags.append(tag)
+
+        if data.get('tipo') == 'nuevo':
             new_pending_article = {
-                "_id": f"pa{next_num}",
+                "_id": article_id,
                 "titulo": data.get("titulo"),
                 "descripcion": data.get("descripcion"),
                 "contenido_markdown": data.get("contenido_markdown"),
                 "imagen_url": data.get("imagen_url"),
-                "tags": data.get("tags"),
+                "tags": transformed_tags,  # Using the transformed tags
                 "autor_id": data.get("autor_id"),
                 "fecha_creacion": datetime.datetime.now().isoformat(),
                 "tipo": data.get("tipo"),
-                "borrador": data.get("borrador", False)
+                "borrador": data.get("borrador", False),
+                "estado": "pendiente",
             }
         else:
             new_pending_article = {
-                "_id": f"pa{next_num}",
+                "_id": article_id,
                 "titulo": data.get("titulo"),
                 "descripcion": data.get("descripcion"),
                 "contenido_markdown": data.get("contenido_markdown"),
                 "imagen_url": data.get("imagen_url"),
-                "tags": data.get("tags"),
+                "tags": transformed_tags,  # Using the transformed tags
                 "autor_id": data.get("autor_id"),
                 "fecha_creacion": data.get("fecha_creacion"),
                 "tipo": data.get("tipo"),
                 "borrador": data.get("borrador", False),
-                "id_articulo_original": data.get("id_articulo_original")
+                "id_articulo_original": data.get("id_articulo_original"),
+                "estado": "pendiente",
             }
 
         db.pending_articles.insert_one(new_pending_article)
@@ -121,8 +145,10 @@ def create_pending_article(request):
         }, status=201)
 
     except Exception as e:
+        import traceback
         print(f"[ERROR] Error al crear el artículo pendiente: {e}")
-        return JsonResponse({"error": "Error al crear el artículo pendiente"}, status=500)
+        print(traceback.format_exc())
+        return JsonResponse({"error": f"Error al crear el artículo pendiente: {str(e)}"}, status=500)
 
 @api_view(['PUT'])
 def delete_pending_article(request, pa_id):
@@ -152,3 +178,21 @@ def pending_to_draft(request, pa_id):
     except Exception as e:
         print(f"[ERROR] Error updating pending article to draft: {e}")
         return JsonResponse({"error": "Error updating pending article to draft"}, status=500)
+
+@api_view(['GET'])
+def check_pending_update(request, pending_article_id):
+    try:
+        # Buscar solo el _id del artículo con estado "pendiente"
+        result = db.pending_articles.find_one(
+            {"id_articulo_original": pending_article_id, "estado": "pendiente"},
+            {"_id": 1}
+        )
+
+        if result:
+            return JsonResponse({"error": "Ya existe una solicitud pendiente para este artículo"}, status=400)
+
+        return JsonResponse({"message": "No hay solicitudes pendientes para este artículo"}, status=200)
+
+    except Exception as e:
+        print(f"[ERROR] Error al verificar artículo pendiente: {e}")
+        return JsonResponse({"error": "Error del servidor"}, status=500)

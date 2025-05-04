@@ -25,6 +25,7 @@ type FormErrors = {
 };
 
 export default function NewArticle() {
+    const [formSubmitted, setFormSubmitted] = useState(false);
     const navigate = useNavigate();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -44,6 +45,8 @@ export default function NewArticle() {
         console.log(`[DEBUG] ${message}`);
         setDebugInfo(prev => [...prev, `[${new Date().toISOString()}] ${message}`]);
     };
+
+
 
     useEffect(() => {
         axios.get(`${API_URL}/api/tags/`)
@@ -216,35 +219,81 @@ export default function NewArticle() {
         addDebug("Form validated, starting submission");
 
         try {
-            // Transform selectedTags into an array of objects with an _id field
-            const formattedTags = selectedTags.map(tagId => ({ _id: tagId }));
+            // Get user data from localStorage
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            const autorId = userData._id || 'unknown';
 
-            const articleData = {
+            // Create the pending article data with direct tag IDs (not objects)
+            const pendingArticleData = {
                 titulo: title,
+                descripcion: description,
                 contenido_markdown: content,
                 imagen_url: imageUrl,
-                tags: formattedTags, // Send tags as objects with _id
-                autor_id: 'escritor',
-                descripcion: description,
-                fecha_creacion: new Date().toISOString()
+                tags: selectedTags,  // Send tags directly as string array
+                autor_id: autorId,
+                fecha_creacion: new Date().toISOString(),
+                tipo: "nuevo",
+                borrador: false
             };
 
-            addDebug(`Sending article data: ${JSON.stringify(articleData)}`);
-            const response = await axios.post(`${API_URL}/api/articles/create/`, articleData);
+            addDebug(`Sending pending article data: ${JSON.stringify(pendingArticleData)}`);
 
-            addDebug(`Article created with ID: ${response.data.id}`);
-            setAlertMessage("Article created successfully!");
+            // Create pending article
+            const pendingResponse = await axios.post(
+                `${API_URL}/api/pending_articles/`,
+                pendingArticleData
+            );
+
+            const pendingArticle = pendingResponse.data.pending_article;
+            addDebug(`Pending article created with ID: ${pendingArticle._id}`);
+
+            // Create article request with correct endpoint and no '_id' field
+            const articleRequestData = {
+                autor_id: autorId,
+                tipo: "nuevo",
+                id_articulo_nuevo: pendingArticle._id
+            };
+
+            addDebug(`Sending article request data: ${JSON.stringify(articleRequestData)}`);
+
+            // Use the correct endpoint without 'create/'
+            const articleRequestResponse = await axios.post(
+                `${API_URL}/api/requests/articles/`,
+                articleRequestData
+            );
+
+            const articleRequest = articleRequestResponse.data;
+            addDebug(`Article request created successfully: ${JSON.stringify(articleRequest)}`);
+
+            // Mark form as submitted to prevent further edits
+            setFormSubmitted(true);
+
+            // Reset form fields (optional - will clear the form but not be visible due to redirect)
+            setTitle('');
+            setDescription('');
+            setContent('');
+            setImageUrl('');
+            setSelectedTags([]);
+
+            setAlertMessage("Article submitted successfully!");
             setAlertType("success");
             setShowAlert(true);
 
-            // Navigate after a short delay to show the success message
+            // Redirect after a short delay
             setTimeout(() => {
-                navigate(`/articles/${response.data.id}`);
+                navigate('/articles');
             }, 1500);
-        } catch (err) {
+
+        } catch (err: any) {
             console.error('Error creating article:', err);
-            addDebug(`Error creating article: ${err}`);
-            setAlertMessage("Failed to create article. Please try again.");
+            addDebug(`Error creating article: ${err.message}`);
+
+            if (err.response) {
+                addDebug(`Final error status: ${err.response.status}`);
+                addDebug(`Final error data: ${JSON.stringify(err.response.data)}`);
+            }
+
+            setAlertMessage(`Failed to create article: ${err.message}`);
             setAlertType("error");
             setShowAlert(true);
         } finally {
@@ -252,9 +301,36 @@ export default function NewArticle() {
         }
     };
 
+    if (formSubmitted) {
+        return (
+            <div className="article-page">
+                <div className={"user-wrapper"}>
+                    <UserProfileBadge />
+                </div>
+                <h1>Article Submitted</h1>
+                <div className="submission-success">
+                    <CustomAlert
+                        type="success"
+                        message="Your article has been submitted successfully and is pending approval."
+                        show={true}
+                        onClose={() => {}}
+                    />
+                    <div className="center-content" style={{ marginTop: "30px" }}>
+                        <p>You will be redirected to the articles page...</p>
+                        <div className="spinner-wrapper">
+                            <Spinner size="small" color="var(--primary-color)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (isLoading) {
         return <div className="article-page">
-            <UserProfileBadge />
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
             <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
                 <Spinner size="medium" color="var(--primary-color)" />
             </div>
@@ -272,7 +348,9 @@ export default function NewArticle() {
 
     return (
         <div className="article-page">
-            <UserProfileBadge />
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
             <h1>Create New Article</h1>
 
             {showAlert && (

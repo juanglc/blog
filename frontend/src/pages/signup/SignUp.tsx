@@ -1,5 +1,5 @@
 // frontend/src/pages/auth/Signup.tsx
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignUp.css';
@@ -22,6 +22,14 @@ const SignUp: React.FC = () => {
             [e.target.name]: e.target.value
         });
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
+        if (token && user) {
+            navigate(+1)
+        }
+    }, [navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -1,5 +1,5 @@
-/* ArticleRequests.css */
-.article-requests {
+/* UserRequestsPage.css */
+.requests-page {
     max-width: none;
     width: 100%;
     margin: 0;
@@ -12,16 +12,12 @@
     min-height: 100vh;
 }
 
-.article-requests > * {
+.requests-page > * {
     max-width: 800px;
     width: 100%;
 }
-.user-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.article-requests h1 {
+
+.requests-page h1 {
     font-size: 2.5rem;
     margin-bottom: 1.5rem;
     color: var(--text-color);
@@ -37,7 +33,7 @@
     justify-content: center;
 }
 
-.filter-buttons button {
+.filter-button {
     padding: 8px 16px;
     background-color: var(--primary-color);
     color: white;
@@ -47,18 +43,23 @@
     transition: var(--transition);
 }
 
-.filter-buttons button:hover {
+.filter-button:hover {
     background-color: var(--primary-dark);
     transform: translateY(-2px);
 }
 
-.filter-buttons button.active {
+.filter-button.active {
     background-color: var(--primary-dark);
     font-weight: bold;
     box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.5);
 }
 
-table {
+.requests-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.requests-table {
     width: 100%;
     border-collapse: collapse;
     background-color: var(--card-bg);
@@ -68,38 +69,97 @@ table {
     overflow: hidden;
 }
 
-table th, table td {
+.requests-table th, .requests-table td {
     padding: 12px 15px;
     text-align: left;
     color: var(--text-color);
     border-bottom: 1px solid var(--primary-light);
 }
 
-table th {
+.requests-table th {
     background-color: var(--primary-color);
+    color: white;
     font-weight: bold;
 }
 
-table tr:hover {
+.requests-table tr:hover {
     background-color: rgba(74, 111, 165, 0.1);
     cursor: pointer;
 }
 
-table tr:last-child td {
+.requests-table tr:last-child td {
     border-bottom: none;
 }
 
-.loading, .error {
-    padding: 20px;
-    text-align: center;
-    width: 100%;
-    font-size: 1.1rem;
-    color: var(--text-color);
-    margin-top: 2rem;
+.spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 50px 0;
 }
 
-.error {
-    color: #dc3545;
+.error-container {
+    text-align: center;
+    padding: 20px;
+    margin: 20px 0;
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.no-requests {
+    text-align: center;
+    padding: 30px;
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin: 20px 0;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.new-request-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.new-request-button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.back-button {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: var(--transition);
+    margin-top: 10px;
+}
+
+.back-button:hover {
+    background-color: var(--secondary-dark);
+    transform: translateY(-2px);
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: var(--primary-light);
+    margin: 20px 0;
+    width: 100%;
 }
 
 @keyframes fadeIn {
@@ -114,7 +174,7 @@ table tr:last-child td {
 }
 
 @media (max-width: 768px) {
-    .article-requests h1 {
+    .requests-page h1 {
         font-size: 2rem;
     }
 
@@ -127,11 +187,17 @@ table tr:last-child td {
         width: 100%;
     }
 
-    table {
+    .requests-table {
         font-size: 0.9rem;
     }
 
-    table th, table td {
+    .requests-table th, .requests-table td {
         padding: 8px 10px;
     }
+}
+
+.user-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }

@@ -160,3 +160,9 @@ hr {
         font-size: 2rem;
     }
 }
+
+.user-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

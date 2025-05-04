@@ -1,0 +1,207 @@
+/* RequestDetails.css */
+.request-details-page {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--background-color);
+    animation: fadeIn 0.5s ease-out;
+    min-height: 100vh;
+}
+
+.request-details-page > * {
+    max-width: 800px;
+    width: 100%;
+}
+
+.request-details-page h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    font-weight: 700;
+    text-align: center;
+}
+
+.request-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--primary-light);
+    padding-bottom: 15px;
+}
+
+.request-header h2 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-approved {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-rejected {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status-cancelled {
+    background-color: #6c757d;
+    color: white;
+}
+
+.request-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    color: var(--text-color);
+}
+
+.info-label {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-radius: 4px;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.cancel-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--border-radius);
+    background-color: #dc3545;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.cancel-button:hover {
+    background-color: #b02a37;
+    transform: translateY(-2px);
+}
+
+.navigation-buttons {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.back-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.back-button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 50px 0;
+}
+
+.error-container {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-top: 20px;
+    text-align: center;
+    box-shadow: var(--box-shadow);
+}
+
+.error-container p {
+    color: #dc3545;
+    margin-bottom: 20px;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: var(--primary-light);
+    opacity: 0.2;
+    margin: 20px 0;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .request-details-page h1 {
+        font-size: 2rem;
+    }
+
+    .request-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .status-badge {
+        align-self: flex-start;
+    }
+
+    .info-item {
+        margin-bottom: 16px;
+    }
+}
+
+.user-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

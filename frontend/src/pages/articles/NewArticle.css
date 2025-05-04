@@ -250,3 +250,9 @@ button:disabled {
     font-size: 1rem;
     transition: var(--transition);
 }
+
+.user-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

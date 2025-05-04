@@ -37,6 +37,8 @@ type FormErrors = {
 
 export default function UpdateArticle() {
     const { id } = useParams<{ id: string }>();
+    const [formSubmitted, setFormSubmitted] = useState(false);
+    const [hasPendingUpdate, setHasPendingUpdate] = useState(false);
     const navigate = useNavigate();
     const [article, setArticle] = useState<ArticleData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -66,6 +68,10 @@ export default function UpdateArticle() {
         tags: []
     });
 
+    const togglePreview = () => {
+        setShowPreview(!showPreview);
+    };
+
     const addDebug = (message: string) => {
         console.log(`[DEBUG] ${message}`);
         setDebugInfo(prev => [...prev, `[${new Date().toISOString()}] ${message}`]);
@@ -77,6 +83,41 @@ export default function UpdateArticle() {
             setLoading(false);
             return;
         }
+
+        // First check if there's a pending update for this article
+        // First check if there's a pending update for this article
+        const checkPendingUpdates = async () => {
+            try {
+                addDebug(`Checking pending updates for article ID: ${id}`);
+                const pendingRes = await fetch(`${API_URL}/api/pending_articles/check/${id}/`);
+
+                // Handle both 400 and 500 responses as indicators of pending updates
+                if (!pendingRes.ok) {
+                    let errorMessage = "Error checking pending updates";
+
+                    try {
+                        const pendingData = await pendingRes.json();
+                        errorMessage = pendingData.error || errorMessage;
+                        addDebug(`Pending update check failed: ${errorMessage}`);
+                    } catch (parseError) {
+                        addDebug(`Error parsing response: ${parseError}`);
+                    }
+
+                    // If status is 400 or 500, consider it as having a pending update
+                    if (pendingRes.status === 400 || pendingRes.status === 500) {
+                        setHasPendingUpdate(true);
+                        addDebug('There is already a pending update for this article');
+                    }
+                }
+
+                // Continue with authorization check
+                checkAuthorization();
+            } catch (error) {
+                addDebug(`Error checking pending updates: ${error}`);
+                // Continue with authorization check even if this fails
+                checkAuthorization();
+            }
+        };
 
         // Step 1: Fetch only autor_id for authorization
         const checkAuthorization = async () => {
@@ -147,7 +188,7 @@ export default function UpdateArticle() {
             }
         };
 
-        checkAuthorization();
+        checkPendingUpdates();
     }, [id, userId, navigate]);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -289,49 +330,152 @@ export default function UpdateArticle() {
         addDebug("Form validated, starting submission");
 
         try {
-            const articleData = {
+            // Get user data from localStorage
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            const autorId = userData._id || 'unknown';
+
+            // Create pending article data
+            const pendingArticleData = {
                 titulo: formData.titulo,
+                descripcion: formData.descripcion,
                 contenido_markdown: formData.contenido_markdown,
                 imagen_url: formData.imagen_url,
                 tags: selectedTags,
-                descripcion: formData.descripcion,
+                autor_id: autorId,
+                fecha_creacion: new Date().toISOString(),
+                tipo: "update",
+                borrador: false,
+                id_articulo_original: id
             };
 
-            addDebug(`Sending article data: ${JSON.stringify(articleData)}`);
-            const response = await fetch(`${API_URL}/api/articles/${id}/update/`, {
-                method: 'PUT',
+            addDebug(`Sending pending article data: ${JSON.stringify(pendingArticleData)}`);
+
+            // Create pending article
+            const pendingResponse = await fetch(`${API_URL}/api/pending_articles/`, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(articleData),
+                body: JSON.stringify(pendingArticleData),
             });
 
-            const result = await response.json();
-            addDebug(`Response received: ${JSON.stringify(result)}`);
+            const pendingResult = await pendingResponse.json();
 
-            if (response.ok) {
-                setAlert({ message: "Article updated successfully!", type: "success" });
-                navigate(`/articles/${id}`);
-            } else {
-                setAlert({ message: `Error: ${result.error || 'Unknown error'}`, type: "error" });
+            if (!pendingResponse.ok) {
+                throw new Error(pendingResult.error || 'Failed to create pending article');
             }
-        } catch (err) {
+
+            const pendingArticle = pendingResult.pending_article;
+            addDebug(`Pending article created with ID: ${pendingArticle._id}`);
+
+            // Create article request
+            const articleRequestData = {
+                autor_id: autorId,
+                tipo: "update",
+                id_articulo_nuevo: pendingArticle._id,
+                id_articulo_original: id
+            };
+
+            addDebug(`Sending article request data: ${JSON.stringify(articleRequestData)}`);
+
+            const requestResponse = await fetch(`${API_URL}/api/requests/articles/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(articleRequestData),
+            });
+
+            const requestResult = await requestResponse.json();
+
+            if (!requestResponse.ok) {
+                throw new Error(requestResult.error || 'Failed to create article request');
+            }
+
+            addDebug(`Article request created successfully: ${JSON.stringify(requestResult)}`);
+
+            // Mark form as submitted to prevent further edits
+            setFormSubmitted(true);
+
+            setAlert({
+                message: "Your update request has been submitted for approval.",
+                type: "success"
+            });
+
+            // Navigate after a short delay
+            setTimeout(() => {
+                navigate(`/articles/${id}`);
+            }, 4000);
+        } catch (err: any) {
             console.error('Error updating article:', err);
             setError('Failed to update article');
-            addDebug(`Error updating article: ${err}`);
+            addDebug(`Error updating article: ${err.message}`);
+            setAlert({
+                message: `Error submitting update: ${err.message}`,
+                type: "error"
+            });
         } finally {
             setSubmitting(false);
         }
     };
 
-    const togglePreview = () => {
-        setShowPreview(!showPreview);
-    };
+    if (hasPendingUpdate) {
+        return (
+            <div className="article-page">
+                <div className={"user-wrapper"}>
+                    <UserProfileBadge />
+                </div>
+                <h1>Update Not Allowed</h1>
+                <div className="pending-update-warning">
+                    <CustomAlert
+                        type="warning"
+                        message="There is already a pending update request for this article. Please wait until it's reviewed before submitting another update."
+                        show={true}
+                        onClose={() => {}}
+                    />
+                    <div style={{ marginTop: "30px" }}>
+                        <button
+                            onClick={() => navigate(`/articles/${id}`)}
+                            className="new-article-button"
+                        >
+                            Back to Article
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (formSubmitted) {
+        return (
+            <div className="article-page">
+                <div className={"user-wrapper"}>
+                    <UserProfileBadge />
+                </div>
+                <h1>Update Request Submitted</h1>
+                <div className="submission-success">
+                    <CustomAlert
+                        type="success"
+                        message="Your article update has been submitted successfully and is pending approval."
+                        show={true}
+                        onClose={() => {}}
+                    />
+                    <div className="center-content" style={{ marginTop: "30px" }}>
+                        <p>You will be redirected to the article page...</p>
+                        <div className="spinner-wrapper">
+                            <Spinner size="small" color="var(--primary-color)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) {
         return <div className="article-page">
-            <UserProfileBadge />
-            <h1>Update Article</h1>
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
             <div className="spinner-wrapper" style={{ margin: "30px auto" }}>
                 <Spinner size="large" color="var(--primary-color)" />
             </div>
@@ -359,7 +503,9 @@ export default function UpdateArticle() {
 
     return (
         <div className="article-page">
-            <UserProfileBadge />
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
             <h1>Update Article</h1>
 
             {alert && (

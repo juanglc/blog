@@ -4,6 +4,8 @@ import axios from 'axios';
 import { API_URL } from '../../../../api/config.ts';
 import './ArticleRequests.css';
 import '../../../../App.css';
+import UserProfileBadge from '../../../../components/userInfo/UserProfileBadge.tsx';
+import { Spinner } from '../../../../components/Spinner.tsx';
 
 interface ArticleRequest {
     _id: string;
@@ -52,11 +54,57 @@ const ArticleRequests = () => {
         navigate(`/admin/article-requests/${requestId}`);
     };
 
-    if (loading) return <div className="loading">Loading article requests...</div>;
+    if (loading) {
+        return (
+            <div className="article-requests">
+                <div className={"user-wrapper"}>
+                    <UserProfileBadge />
+                </div>
+                <h1 className="skeleton-line title-line"></h1>
+
+                <div className="filter-buttons">
+                    <div className="skeleton-line" style={{ width: '100px' }}></div>
+                    <div className="skeleton-line" style={{ width: '100px' }}></div>
+                    <div className="skeleton-line" style={{ width: '100px' }}></div>
+                </div>
+
+                <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
+                    <Spinner size="medium" color="var(--primary-color)" />
+                </div>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {[1, 2, 3, 4, 5].map((item) => (
+                        <tr key={item}>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+
     if (error) return <div className="error">{error}</div>;
 
     return (
         <div className="article-requests">
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
             <h1>Article Requests</h1>
             <div className="filter-buttons">
                 <button

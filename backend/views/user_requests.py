@@ -188,26 +188,49 @@ def get_approved_user_requests(request):
         print(f"[ERROR] Error al obtener las solicitudes aprobadas: {e}")
         return JsonResponse({"error": "Error al obtener las solicitudes aprobadas"}, status=500)
 
-
 @api_view(['POST'])
 def create_user_request(request, user_id):
     try:
         data = request.data
         print(f"[DEBUG] Datos recibidos para crear una solicitud de usuario: {data}")
 
-        latest_request = db.user_requests.find_one(
-            {"_id": {"$regex": "^u\\d+$"}},
-            sort=[("_id", -1)]
-        )
+        # Find all documents and determine the highest ID number
+        all_requests = list(db.user_requests.find(
+            {"_id": {"$regex": "^req_user_\\d+$"}},
+            {"_id": 1}
+        ))
 
-        if latest_request:
-            latest_id = latest_request["_id"]
-            next_num = int(latest_id[1:]) + 1
-        else:
-            next_num = 1
+        # Extract numbers from IDs and find the maximum
+        max_num = 0
+        for req in all_requests:
+            try:
+                id_parts = req["_id"].split("_")
+                if len(id_parts) >= 3:
+                    num = int(id_parts[2])
+                    if num > max_num:
+                        max_num = num
+            except (ValueError, IndexError):
+                continue
+
+        # Increment the maximum number found
+        next_num = max_num + 1
+
+        # Format with leading zeros for consistent numbering
+        request_id = f"req_user_{next_num:03d}"
+
+        print(f"[DEBUG] Generated new request ID: {request_id}")
+
+        # Verify this ID doesn't already exist
+        existing = db.user_requests.find_one({"_id": request_id})
+        if existing:
+            # In the rare case of collision, add timestamp to ensure uniqueness
+            import time
+            timestamp = int(time.time())
+            request_id = f"req_user_{next_num:03d}_{timestamp}"
+            print(f"[DEBUG] ID collision detected! Using timestamped ID: {request_id}")
 
         new_request = {
-            "_id": f"req_user_00{next_num}",
+            "_id": request_id,
             "user_id": user_id,
             "rol_actual": data.get("rol_actual", ""),
             "rol_deseado": data.get("rol_deseado", ""),
@@ -257,8 +280,146 @@ def check_active_requests(request, user_id):
     try:
         checker = list(db.user_requests.find({'user_id': user_id, 'estado': 'pendiente'}))
         if len(checker) > 0:
-            return JsonResponse({"message": "Ya existe una solicitud activa para este usuario"}, status=400)
+            request_id = checker[0]["_id"]  # Access the first element's _id
+            return JsonResponse({
+                "message": "Ya existe una solicitud activa para este usuario",
+                "request_id": request_id
+            }, status=400)
         return JsonResponse({"message": "No hay solicitudes activas para este usuario"}, status=200)
     except Exception as e:
         print(f"[ERROR] Error al verificar la solicitud activa: {e}")
         return JsonResponse({"error": "Error al verificar la solicitud activa"}, status=500)
+@api_view(['GET'])
+def get_active_user_requests_by_user(request, user_id):
+    try:
+        page = int(request.query_params.get('page', 1))
+        per_page = int(request.query_params.get('per_page', 9))
+        skip = (page - 1) * per_page
+        user_requests = list(db.user_requests.find({"user_id": user_id, "estado": "pendiente"}).sort('fecha', -1).skip(skip).limit(per_page))
+        total_user_requests = len(user_requests)
+        if not user_requests:
+            return Response({
+                "requests": [],
+                "pagination": {
+                    "total": total_user_requests,
+                    "page": page,
+                    "per_page": per_page,
+                    "pages": (total_user_requests + per_page - 1) // per_page
+                },
+                "message": "No hay solicitudes para este usuario"
+            })
+
+        enriched = []
+        for req in user_requests:
+            serialized = serialize_full_user_requests(req, db.users)
+            enriched.append(serialized)
+
+        return Response({
+            "requests": enriched,
+            "pagination": {
+                "total": total_user_requests,
+                "page": page,
+                "per_page": per_page,
+                "pages": (total_user_requests + per_page - 1) // per_page
+            },
+            "message": "Solicitudes obtenidas exitosamente"
+        })
+    except Exception as e:
+        print(f"[ERROR] Error al obtener las solicitudes por usuario: {e}")
+        return JsonResponse({"error": "Error al obtener las solicitudes"}, status=500)
+
+@api_view(['GET'])
+def get_denied_user_requests_by_user(request, user_id):
+    try:
+        page = int(request.query_params.get('page', 1))
+        per_page = int(request.query_params.get('per_page', 9))
+        skip = (page - 1) * per_page
+        user_requests = list(db.user_requests.find({"user_id": user_id, "estado": "denegado"}).sort('fecha', -1).skip(skip).limit(per_page))
+        total_user_requests = len(user_requests)
+        if not user_requests:
+            return Response({
+                "requests": [],
+                "pagination": {
+                    "total": total_user_requests,
+                    "page": page,
+                    "per_page": per_page,
+                    "pages": (total_user_requests + per_page - 1) // per_page
+                },
+                "message": "No hay solicitudes para este usuario"
+            })
+
+        enriched = []
+        for req in user_requests:
+            serialized = serialize_full_user_requests(req, db.users)
+            enriched.append(serialized)
+
+        return Response({
+            "requests": enriched,
+            "pagination": {
+                "total": total_user_requests,
+                "page": page,
+                "per_page": per_page,
+                "pages": (total_user_requests + per_page - 1) // per_page
+            },
+            "message": "Solicitudes obtenidas exitosamente"
+        })
+    except Exception as e:
+        print(f"[ERROR] Error al obtener las solicitudes por usuario: {e}")
+        return JsonResponse({"error": "Error al obtener las solicitudes"}, status=500)
+
+@api_view(['GET'])
+def get_approved_user_requests_by_user(request, user_id):
+    try:
+        page = int(request.query_params.get('page', 1))
+        per_page = int(request.query_params.get('per_page', 9))
+        skip = (page - 1) * per_page
+        user_requests = list(db.user_requests.find({"user_id": user_id, "estado": "aprobado"}).sort('fecha', -1).skip(skip).limit(per_page))
+        total_user_requests = len(user_requests)
+        if not user_requests:
+            return Response({
+                "requests": [],
+                "pagination": {
+                    "total": total_user_requests,
+                    "page": page,
+                    "per_page": per_page,
+                    "pages": (total_user_requests + per_page - 1) // per_page
+                },
+                "message": "No hay solicitudes para este usuario"
+            })
+
+        enriched = []
+        for req in user_requests:
+            serialized = serialize_full_user_requests(req, db.users)
+            enriched.append(serialized)
+
+        return Response({
+            "requests": enriched,
+            "pagination": {
+                "total": total_user_requests,
+                "page": page,
+                "per_page": per_page,
+                "pages": (total_user_requests + per_page - 1) // per_page
+            },
+            "message": "Solicitudes obtenidas exitosamente"
+        })
+    except Exception as e:
+        print(f"[ERROR] Error al obtener las solicitudes por usuario: {e}")
+        return JsonResponse({"error": "Error al obtener las solicitudes"}, status=500)
+
+@api_view(['PUT'])
+def cancel_user_request(request, request_id):
+    try:
+        result = db.user_requests.update_one(
+            {"_id": request_id},  # Use the ID directly without ObjectId conversion
+            {"$set": {"estado": "cancelado"}}
+        )
+
+        if result.matched_count == 0:
+            return Response({"error": "User request not found"}, status=400)
+
+        return Response({"message": "User request cancelled successfully"}, status=200)
+
+    except Exception as e:
+        print(f"Error cancelling user request: {str(e)}")
+        return Response({"error": f"An error occurred while cancelling the user request: {str(e)}"},
+                        status=500)

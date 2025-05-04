@@ -292,3 +292,9 @@
         opacity: 0.6;
     }
 }
+
+.user-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

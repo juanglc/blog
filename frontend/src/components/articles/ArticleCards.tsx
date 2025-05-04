@@ -159,7 +159,9 @@ export default function ArticleCards() {
 // Replace the current loading condition
     if (loading) {
         return <div className="article-section">
-            <UserProfileBadge />
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
             <h2 className="article-title-main">Artículos</h2>
             <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
                 <Spinner size="medium" color="var(--primary-color)" />
@@ -197,7 +199,9 @@ export default function ArticleCards() {
 
     return (
         <div className="article-section">
-            <UserProfileBadge />
+            <div className={"user-wrapper"}>
+                <UserProfileBadge />
+            </div>
 
             {alert && (
                 <div className="mt-2 mb-4 w-full">

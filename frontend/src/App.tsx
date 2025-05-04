@@ -16,18 +16,27 @@ import UserRequests from './pages/admin/requests/users/UserRequests.tsx';
 import UserRequestsDetails from './pages/admin/requests/users/UserRequestsDetails.tsx';
 
 import UserProfile from './pages/UserProfile';
+import UserRequestsPage from './pages/userRequestsPage/UserRequestPage.tsx';
+import RequestDetails from './pages/userRequestsPage/Details.tsx';
+import ArticleRequestsPage from './pages/articleRequestsPage/ArticleRequestsPage.tsx';
+import ArticleDetails from './pages/articleRequestsPage/ArticleDetails.tsx';
 
 interface PrivateRouteProps {
     element: React.ReactNode;
     requiredRoles?: string[];
+    requireUserId?: boolean;
 }
 
-const PrivateRoute = ({ element, requiredRoles }: PrivateRouteProps) => {
+const PrivateRoute = ({ element, requiredRoles, requireUserId }: PrivateRouteProps) => {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user._id;
 
     if (!token) return <Navigate to="/login" replace />;
     if (requiredRoles && !requiredRoles.includes(user.rol)) {
+        return <Navigate to="/articles" replace />;
+    }
+    if (requireUserId && !userId) {
         return <Navigate to="/articles" replace />;
     }
     return <>{element}</>;
@@ -69,6 +78,22 @@ function App() {
                 } />
                 <Route path="/admin/user-requests/:requestId" element={
                     <PrivateRoute element={<UserRequestsDetails />} requiredRoles={['admin']} />
+                } />
+
+                {/* User requests routes */}
+                <Route path="/requests/user" element={
+                    <PrivateRoute element={<UserRequestsPage />} requireUserId={true} />
+                } />
+                <Route path="/requests/user/:requestId" element={
+                    <PrivateRoute element={<RequestDetails />} requireUserId={true} />
+                } />
+
+                {/* Article requests routes */}
+                <Route path="/requests/articles" element={
+                    <PrivateRoute element={<ArticleRequestsPage />} requireUserId={true} requiredRoles={['admin', 'escritor']}/>
+                } />
+                <Route path="/requests/articles/:requestId" element={
+                    <PrivateRoute element={<ArticleDetails />} requireUserId={true} requiredRoles={['admin', 'escritor']}/>
                 } />
 
                 {/* Protected routes */}
