@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../api/config';
 import './LoginPage.css';
+import '../../App.css';
 
 interface LoginCredentials {
     username?: string;
@@ -95,7 +96,6 @@ const LoginPage = () => {
                             name="identifier"
                             value={formData.identifier}
                             onChange={handleChange}
-                            placeholder="Enter your username or email"
                             disabled={isLoading}
                             autoFocus
                         />
@@ -110,7 +110,6 @@ const LoginPage = () => {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                placeholder="Enter your password"
                                 disabled={isLoading}
                             />
                             <button

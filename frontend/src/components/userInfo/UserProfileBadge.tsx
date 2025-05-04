@@ -1,7 +1,7 @@
-// src/components/userInfo/UserProfileBadge.tsx
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserProfileBadge.css';
+import '../../App.css';
 
 interface User {
     _id?: string;
@@ -56,6 +56,11 @@ const UserProfileBadge = () => {
         navigate('/login');
     };
 
+    const handleProfile = () => {
+        setShowDropdown(false);
+        navigate('/profile');
+    };
+
     return (
         <div className="dropdown dropdown-bottom dropdown-end user-profile-badge" ref={dropdownRef}>
             <div
@@ -74,6 +79,11 @@ const UserProfileBadge = () => {
             </div>
             {showDropdown && (
                 <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+                    <li>
+                        <button className="profile-button" onClick={handleProfile}>
+                            Profile
+                        </button>
+                    </li>
                     <li>
                         <button className="logout-button" onClick={handleLogout}>
                             Cerrar Sesión

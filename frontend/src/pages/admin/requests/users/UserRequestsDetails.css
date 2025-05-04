@@ -1,0 +1,158 @@
+/* UserRequestsDetails.css */
+.user-request-details {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--background-color);
+    animation: fadeIn 0.5s ease-out;
+    min-height: 100vh;
+}
+
+.user-request-details > * {
+    max-width: 800px;
+    width: 100%;
+}
+
+.user-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.user-request-details h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    font-weight: 700;
+    text-align: center;
+}
+
+.request-details {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.request-detail {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    color: var(--text-color);
+}
+
+.request-detail strong {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.view-user-profile-button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.view-user-profile-button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    margin: 20px 0;
+    width: 100%;
+}
+
+.action-buttons button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: var(--border-radius);
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.action-buttons button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.action-buttons button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.action-buttons button.reject-button {
+    background-color: #dc3545;
+}
+
+.action-buttons button.reject-button:hover:not(:disabled) {
+    background-color: #b02a37;
+}
+
+.back-button {
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #0056b3;
+}
+
+hr {
+    border-color: var(--primary-light);
+    opacity: 0.2;
+    margin: 1rem 0;
+    width: 100%;
+}
+
+.loading, .error {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-color);
+    font-size: 1.2rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .request-detail {
+        margin-bottom: 16px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .user-request-details h1 {
+        font-size: 2rem;
+    }
+}

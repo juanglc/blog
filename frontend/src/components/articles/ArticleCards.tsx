@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './ArticleCards.css';
 import '../../pages/articles/ArticlePage.css';
 import { API_URL } from "../../api/config.ts";
 import UserProfileBadge from "../../components/userInfo/UserProfileBadge";
+import { CustomAlert } from "../../components/alerts/Alerts.tsx";
+import '../../App.css';
+import { Spinner } from '../Spinner.tsx';
 
 type Article = {
     imagen_url: string;
@@ -52,6 +55,9 @@ export default function ArticleCards() {
     const isAuthorView = !!authorId;
     const currentPage = parseInt(searchParams.get('page') || '1');
 
+    const location = useLocation();
+    const [alert, setAlert] = useState<{ message: string, type: string } | null>(null);
+
     useEffect(() => {
         setLoading(true);
 
@@ -89,6 +95,19 @@ export default function ArticleCards() {
                 setLoading(false);
             });
     }, [tagId, authorId, isTagView, isAuthorView, currentPage]);
+
+    useEffect(() => {
+        if (location.state?.message) {
+            setAlert({
+                message: location.state.message,
+                type: location.state.alertType || "info"
+            });
+
+            // Limpiar el state para evitar que se repita al recargar
+            navigate(location.pathname, { replace: true });
+        }
+    }, [location.state, location.pathname, navigate]);
+
 
     const handleCardClick = (id: string) => {
         navigate(`/articles/${id}`);
@@ -135,9 +154,29 @@ export default function ArticleCards() {
 
         return pageNumbers;
     };
+// You'll need to create this component
 
+// Replace the current loading condition
     if (loading) {
-        return <div className="loading">Loading articles...</div>;
+        return <div className="article-section">
+            <UserProfileBadge />
+            <h2 className="article-title-main">Artículos</h2>
+            <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
+                <Spinner size="medium" color="var(--primary-color)" />
+            </div>
+            <div className="article-grid skeleton-grid">
+                {[1, 2, 3, 4, 5, 6].map((item) => (
+                    <div key={item} className="article-card loading-card">
+                        <div className="article-image-placeholder"></div>
+                        <div className="article-content">
+                            <div className="skeleton-line title-line"></div>
+                            <div className="skeleton-line"></div>
+                            <div className="skeleton-line"></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>;
     }
 
     if (error) {
@@ -153,12 +192,24 @@ export default function ArticleCards() {
     if (isTagView) {
         pageTitle = `Artículos con Tag ${tagName || 'Cargando...'}`;
     } else if (isAuthorView) {
-            pageTitle = `Artículos de: ${authorName || 'Cargando...'}`;
+        pageTitle = `Artículos de: ${authorName || 'Cargando...'}`;
     }
 
     return (
         <div className="article-section">
             <UserProfileBadge />
+
+            {alert && (
+                <div className="mt-2 mb-4 w-full">
+                    <CustomAlert
+                        type={alert.type as "info" | "success" | "warning" | "error"}
+                        message={alert.message}
+                        show={!!alert}
+                        onClose={() => setAlert(null)}
+                    />
+                </div>
+            )}
+
             <h2 className="article-title-main">{pageTitle}</h2>
 
             {articles.length === 0 ? (

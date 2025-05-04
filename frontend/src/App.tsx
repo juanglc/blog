@@ -9,28 +9,29 @@ import NewArticle from './pages/articles/NewArticle';
 import UpdateArticle from "./pages/articles/UpdateArticle.tsx";
 import PendingArticle from './pages/admin/PendingArticle';
 
+import ArticleRequests from './pages/admin/requests/articles/ArticleRequests.tsx';
+import ArticleRequestDetails from './pages/admin/requests/articles/ArticleRequestsDetails.tsx';
+
+import UserRequests from './pages/admin/requests/users/UserRequests.tsx';
+import UserRequestsDetails from './pages/admin/requests/users/UserRequestsDetails.tsx';
+
+import UserProfile from './pages/UserProfile';
+
 interface PrivateRouteProps {
     element: React.ReactNode;
-    requiredRoles?: string[]; // Allow multiple roles
+    requiredRoles?: string[];
 }
 
 const PrivateRoute = ({ element, requiredRoles }: PrivateRouteProps) => {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-    // Redirect to login if no token
     if (!token) return <Navigate to="/login" replace />;
-
-    // Redirect if user role is not allowed
     if (requiredRoles && !requiredRoles.includes(user.rol)) {
         return <Navigate to="/articles" replace />;
     }
-
     return <>{element}</>;
 };
-
-import ArticleRequests from './pages/admin/ArticleRequests';
-import ArticleRequestDetails from './pages/admin/ArticleRequestsDetails';
 
 function App() {
     const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +64,12 @@ function App() {
                 <Route path="/admin/pending-article/:id" element={
                     <PrivateRoute element={<PendingArticle />} requiredRoles={['admin']} />
                 } />
+                <Route path="/admin/user-requests" element={
+                    <PrivateRoute element={<UserRequests />} requiredRoles={['admin']} />
+                } />
+                <Route path="/admin/user-requests/:requestId" element={
+                    <PrivateRoute element={<UserRequestsDetails />} requiredRoles={['admin']} />
+                } />
 
                 {/* Protected routes */}
                 <Route path="/articles" element={<PrivateRoute element={<ArticleCards />} />} />
@@ -77,6 +84,11 @@ function App() {
                 } />
                 <Route path="/tags/:tagId" element={<PrivateRoute element={<ArticleCards />} />} />
                 <Route path="/authors/:authorId" element={<PrivateRoute element={<ArticleCards />} />} />
+
+                {/* User profile route */}
+                <Route path="/profile" element={
+                    <PrivateRoute element={<UserProfile />} />
+                } />
 
                 {/* Redirect root to admin, articles, or login based on auth state and role */}
                 <Route path="/" element={

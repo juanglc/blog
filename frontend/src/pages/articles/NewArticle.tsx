@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import ImageUploader from '../../components/ImageUploader.tsx';
-import './ArticlePage.css';
+import './NewArticle.css';
 import {API_URL} from "../../api/config.ts";
 import UserProfileBadge from "../../components/userInfo/UserProfileBadge.tsx";
+import '../../App.css';
+import { Spinner } from '../../components/Spinner.tsx';
+import { CustomAlert } from '../../components/alerts/Alerts.tsx';
 
 type Tag = {
     _id: string;
@@ -30,10 +33,12 @@ export default function NewArticle() {
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
     const [formErrors, setFormErrors] = useState<FormErrors>({});
     const [showPreview, setShowPreview] = useState(false);
     const [debugInfo, setDebugInfo] = useState<string[]>([]);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<"success" | "error" | "info" | "warning">("info");
 
     const addDebug = (message: string) => {
         console.log(`[DEBUG] ${message}`);
@@ -49,6 +54,9 @@ export default function NewArticle() {
             .catch(err => {
                 console.error('Error fetching tags:', err);
                 addDebug(`Error fetching tags: ${err}`);
+                setAlertMessage("Failed to load tags. Please refresh and try again.");
+                setAlertType("error");
+                setShowAlert(true);
             });
     }, []);
 
@@ -122,15 +130,6 @@ export default function NewArticle() {
             case 'heading3':
                 modifiedText = text.substring(0, start) + `### ${text.substring(start, end) || 'Encabezado nivel 3'}` + text.substring(end);
                 break;
-            case 'link':
-                modifiedText = text.substring(0, start) + `[${text.substring(start, end) || 'texto del enlace'}](https://ejemplo.com)` + text.substring(end);
-                break;
-            case 'code':
-                modifiedText = text.substring(0, start) + `\`\`\`\n${text.substring(start, end) || 'código'}\n\`\`\`` + text.substring(end);
-                break;
-            case 'blockquote':
-                modifiedText = text.substring(0, start) + `> ${text.substring(start, end) || 'cita'}` + text.substring(end);
-                break;
             case 'list':
                 modifiedText = text.substring(0, start) + `\n- ${text.substring(start, end) || 'Item 1'}\n- Item 2\n- Item 3` + text.substring(end);
                 break;
@@ -191,7 +190,7 @@ export default function NewArticle() {
             isValid = false;
         }
 
-        // Check tags (optional)
+        // Check tags
         if (selectedTags.length === 0) {
             errors.tags = 'Seleccione al menos un tag';
             isValid = false;
@@ -203,11 +202,13 @@ export default function NewArticle() {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        setError('');
         addDebug("Starting submission validation");
 
         if (!validateForm()) {
             addDebug("Form validation failed");
+            setAlertMessage("Please fill in all required fields");
+            setAlertType("error");
+            setShowAlert(true);
             return;
         }
 
@@ -232,22 +233,56 @@ export default function NewArticle() {
             const response = await axios.post(`${API_URL}/api/articles/create/`, articleData);
 
             addDebug(`Article created with ID: ${response.data.id}`);
-            navigate(`/articles/${response.data.id}`);
+            setAlertMessage("Article created successfully!");
+            setAlertType("success");
+            setShowAlert(true);
+
+            // Navigate after a short delay to show the success message
+            setTimeout(() => {
+                navigate(`/articles/${response.data.id}`);
+            }, 1500);
         } catch (err) {
             console.error('Error creating article:', err);
-            setError('Failed to create article');
             addDebug(`Error creating article: ${err}`);
+            setAlertMessage("Failed to create article. Please try again.");
+            setAlertType("error");
+            setShowAlert(true);
         } finally {
             setIsLoading(false);
         }
     };
+
+    if (isLoading) {
+        return <div className="article-page">
+            <UserProfileBadge />
+            <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
+                <Spinner size="medium" color="var(--primary-color)" />
+            </div>
+            <div className="article-skeleton">
+                <div className="skeleton-line title-line" style={{ height: "40px", width: "80%" }}></div>
+                <div className="skeleton-line" style={{ width: "50%", marginBottom: "30px" }}></div>
+                <div className="article-image-placeholder" style={{ height: "300px", marginBottom: "20px" }}></div>
+                <div className="skeleton-line" style={{ width: "100%" }}></div>
+                <div className="skeleton-line" style={{ width: "100%" }}></div>
+                <div className="skeleton-line" style={{ width: "90%" }}></div>
+                <div className="skeleton-line" style={{ width: "95%" }}></div>
+            </div>
+        </div>;
+    }
 
     return (
         <div className="article-page">
             <UserProfileBadge />
             <h1>Create New Article</h1>
 
-            {error && <div className="message error">{error}</div>}
+            {showAlert && (
+                <CustomAlert
+                    type={alertType}
+                    message={alertMessage}
+                    show={showAlert}
+                    onClose={() => setShowAlert(false)}
+                />
+            )}
 
             <form onSubmit={handleSubmit}>
                 <div className={`form-group ${formErrors.titulo ? 'has-error' : ''}`}>
@@ -269,7 +304,8 @@ export default function NewArticle() {
                         value={description}
                         onChange={handleDescriptionChange}
                         rows={3}
-                        maxLength={100} // Limita la entrada a 100 caracteres
+                        maxLength={100}
+                        style={{resize: 'none'}}
                         className={formErrors.descripcion ? 'error-input' : ''}
                     ></textarea>
                     {formErrors.descripcion && <div className="error-message">{formErrors.descripcion}</div>}
@@ -299,14 +335,16 @@ export default function NewArticle() {
                     <div className="tags-container">
                         {availableTags.map(tag => (
                             <div key={tag._id} className="tag-checkbox">
-                                <input
-                                    type="checkbox"
-                                    id={`tag-${tag._id}`}
-                                    value={tag._id}
-                                    checked={selectedTags.includes(tag._id)}
-                                    onChange={handleTagChange}
-                                />
-                                <label htmlFor={`tag-${tag._id}`}>{tag.nombre}</label>
+                                <label htmlFor={`tag-${tag._id}`}>
+                                    <input
+                                        type="checkbox"
+                                        id={`tag-${tag._id}`}
+                                        value={tag._id}
+                                        checked={selectedTags.includes(tag._id)}
+                                        onChange={handleTagChange}
+                                    />
+                                    {tag.nombre}
+                                </label>
                             </div>
                         ))}
                     </div>
@@ -330,15 +368,6 @@ export default function NewArticle() {
                         </button>
                         <button type="button" onClick={() => insertMarkdown('heading3')} title="Header 3">
                             H3
-                        </button>
-                        <button type="button" onClick={() => insertMarkdown('link')} title="Link">
-                            🔗
-                        </button>
-                        <button type="button" onClick={() => insertMarkdown('code')} title="Code Block">
-                            &lt;/&gt;
-                        </button>
-                        <button type="button" onClick={() => insertMarkdown('blockquote')} title="Quote">
-                            💬
                         </button>
                         <button type="button" onClick={() => insertMarkdown('list')} title="Bulleted List">
                             •
@@ -390,7 +419,7 @@ export default function NewArticle() {
             </form>
 
             {/* Debug Information */}
-            <div className="debug-info" style={{ marginTop: '30px', padding: '10px', background: '#f8f9fa', border: '1px solid #ddd' }}>
+            <div className="debug-info">
                 <h3>Debug Information</h3>
                 <pre style={{ maxHeight: '200px', overflow: 'auto' }}>
                     {debugInfo.map((msg, i) => (

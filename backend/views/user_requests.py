@@ -94,43 +94,44 @@ def get_active_user_requests(request):
         return JsonResponse({"error": "Error al obtener las solicitudes activas"}, status=500)
 
 @api_view(['GET'])
-def get_rejected_user_requests(request):
+def get_denied_user_requests(request):
     try:
-        page = int(request.query_params.get('page', 1))
-        per_page = int(request.query_params.get('per_page', 9))
-        skip = (page - 1) * per_page
-        rejected_requests = list(db.user_requests.find({"estado": "denegado"}).sort('fecha', -1).skip(skip).limit(per_page))
-        total_rejected_requests = len(rejected_requests)
-        if not rejected_requests:
+        page=int(request.query_params.get('page', 1))
+        per_page=int(request.query_params.get('per_page', 9))
+        skip=(page-1)*per_page
+        denied_requests = list(db.user_requests.find({'estado': 'denegado'}).sort('fecha', -1).skip(skip).limit(per_page))
+        total_denied_requests = db.user_requests.count_documents({'estado': 'denegado'})
+
+        if not denied_requests:
             return Response({
                 "requests": [],
                 "pagination": {
-                    "total": total_rejected_requests,
+                    "total": total_denied_requests,
                     "page": page,
                     "per_page": per_page,
-                    "pages": (total_rejected_requests + per_page - 1) // per_page
+                    "pages": (total_denied_requests + per_page - 1) // per_page
                 }
             })
-        # Add debugging to see exactly what's happening
+
         enriched = []
-        for req in rejected_requests:
+        for req in denied_requests:
             serialized = serialize_full_user_requests(req, db.users)
             print(f"[DEBUG] Request: {req}")
             print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
+
         return Response({
-            "requests":  enriched,
+            "requests": enriched,
             "pagination": {
-                "total": total_rejected_requests,
+                "total": total_denied_requests,
                 "page": page,
                 "per_page": per_page,
-                "pages": (total_rejected_requests + per_page - 1) // per_page
+                "pages": (total_denied_requests + per_page - 1) // per_page
             }
         })
-
     except Exception as e:
-        print(f"[ERROR] Error al obtener las solicitudes rechazadas: {e}")
-        return JsonResponse({"error": "Error al obtener las solicitudes rechazadas"}, status=500)
+        print(f"[ERROR] Error al obtener las solicitudes denegadas: {e}")
+        return JsonResponse({"error": "Error al obtener las solicitudes denegadas"}, status=500)
 
 @api_view(['GET'])
 def get_user_request_by_id(request, request_id):
@@ -157,6 +158,7 @@ def get_approved_user_requests(request):
         skip = (page - 1) * per_page
         approved_requests = list(db.user_requests.find({"estado": "aprobado"}).sort('fecha', -1).skip(skip).limit(per_page))
         total_approved_requests = len(approved_requests)
+
         if not approved_requests:
             return Response({
                 "requests": [],
@@ -167,15 +169,14 @@ def get_approved_user_requests(request):
                     "pages": (total_approved_requests + per_page - 1) // per_page
                 }
             })
-        # Add debugging to see exactly what's happening
+
         enriched = []
         for req in approved_requests:
             serialized = serialize_full_user_requests(req, db.users)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
+
         return Response({
-            "requests":  enriched,
+            "requests": enriched,
             "pagination": {
                 "total": total_approved_requests,
                 "page": page,
@@ -183,10 +184,10 @@ def get_approved_user_requests(request):
                 "pages": (total_approved_requests + per_page - 1) // per_page
             }
         })
-
     except Exception as e:
         print(f"[ERROR] Error al obtener las solicitudes aprobadas: {e}")
         return JsonResponse({"error": "Error al obtener las solicitudes aprobadas"}, status=500)
+
 
 @api_view(['POST'])
 def create_user_request(request, user_id):
@@ -206,7 +207,7 @@ def create_user_request(request, user_id):
             next_num = 1
 
         new_request = {
-            "_id": f"req_user_{next_num}",
+            "_id": f"req_user_00{next_num}",
             "user_id": user_id,
             "rol_actual": data.get("rol_actual", ""),
             "rol_deseado": data.get("rol_deseado", ""),
@@ -250,3 +251,14 @@ def approve_user_request(request, request_id):
     except Exception as e:
         print(f"[ERROR] Error al aprobar la solicitud: {e}")
         return JsonResponse({"error": "Error al aprobar la solicitud"}, status=500)
+
+@api_view(['GET'])
+def check_active_requests(request, user_id):
+    try:
+        checker = list(db.user_requests.find({'user_id': user_id, 'estado': 'pendiente'}))
+        if len(checker) > 0:
+            return JsonResponse({"message": "Ya existe una solicitud activa para este usuario"}, status=400)
+        return JsonResponse({"message": "No hay solicitudes activas para este usuario"}, status=200)
+    except Exception as e:
+        print(f"[ERROR] Error al verificar la solicitud activa: {e}")
+        return JsonResponse({"error": "Error al verificar la solicitud activa"}, status=500)

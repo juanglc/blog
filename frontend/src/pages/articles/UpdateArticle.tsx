@@ -1,11 +1,13 @@
-// frontend/src/pages/UpdateArticle.tsx
 import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import ImageUploader from '../../components/ImageUploader.tsx';
-import './ArticlePage.css';
-import {API_URL} from "../../api/config.ts";
+import './NewArticle.css';
+import { API_URL } from "../../api/config.ts";
 import UserProfileBadge from "../../components/userInfo/UserProfileBadge.tsx";
+import '../../App.css';
+import { Spinner } from "../../components/Spinner.tsx";
+import { CustomAlert } from "../../components/alerts/Alerts.tsx";
 
 type Tag = {
     nombre: string;
@@ -18,6 +20,7 @@ type ArticleData = {
     titulo: string;
     contenido_markdown: string;
     autor: string;
+    autor_id: string;
     fecha_creacion: string;
     descripcion: string;
     tags?: Tag[];
@@ -40,13 +43,16 @@ export default function UpdateArticle() {
     const [error, setError] = useState<string | null>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+    const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' | "info" | "warning" } | null>(null);
     const [debugInfo, setDebugInfo] = useState<string[]>([]);
     const [formErrors, setFormErrors] = useState<FormErrors>({});
 
     // Tags state
     const [allTags, setAllTags] = useState<Tag[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user._id;
 
     // Form data state
     const [formData, setFormData] = useState<ArticleData>({
@@ -55,6 +61,7 @@ export default function UpdateArticle() {
         contenido_markdown: '',
         imagen_url: '',
         autor: '',
+        autor_id: '',
         fecha_creacion: '',
         tags: []
     });
@@ -65,41 +72,51 @@ export default function UpdateArticle() {
     };
 
     useEffect(() => {
-        // Fetch all available tags
-        const fetchTags = async () => {
-            try {
-                const response = await fetch(`${API_URL}/api/tags/`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch tags');
-                }
-                const data = await response.json();
-                addDebug(`Fetched ${data.length} tags`);
-                setAllTags(data);
-            } catch (error) {
-                console.error('Error fetching tags:', error);
-                addDebug(`Error fetching tags: ${error}`);
-            }
-        };
-
-        fetchTags();
-    }, []);
-
-    useEffect(() => {
         if (!id) {
             setError('Invalid article ID');
             setLoading(false);
             return;
         }
 
-        const fetchArticle = async () => {
+        // Step 1: Fetch only autor_id for authorization
+        const checkAuthorization = async () => {
             try {
-                addDebug(`Fetching article with ID: ${id}`);
-                const response = await fetch(`${API_URL}/api/articles/${id}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch article');
+                addDebug(`Checking authorization for article ID: ${id}`);
+                const res = await fetch(`${API_URL}/api/articles/get/author/${id}/`);
+                if (!res.ok) throw new Error('Failed to fetch author');
+                const { autor_id } = await res.json();
+
+                if (userId && userId !== autor_id) {
+                    navigate(`/articles`, {
+                        state: {
+                            message: "You are not authorized to edit this article.",
+                            alertType: "warning"
+                        }
+                    });
+                    return;
                 }
-                const data = await response.json();
-                addDebug(`Article data received: ${JSON.stringify(data)}`);
+
+                // Step 2: Fetch tags and article only if authorized
+                fetchTagsAndArticle();
+            } catch (error) {
+                setError('Authorization check failed');
+                setLoading(false);
+            }
+        };
+
+        const fetchTagsAndArticle = async () => {
+            try {
+                // Fetch tags
+                const tagsRes = await fetch(`${API_URL}/api/tags/`);
+                if (!tagsRes.ok) throw new Error('Failed to fetch tags');
+                const tagsData = await tagsRes.json();
+                setAllTags(tagsData);
+
+                // Fetch article
+                addDebug(`Fetching article with ID: ${id}`);
+                const articleRes = await fetch(`${API_URL}/api/articles/${id}`);
+                if (!articleRes.ok) throw new Error('Failed to fetch article');
+                const data = await articleRes.json();
                 setArticle(data);
 
                 // Initialize form with article data
@@ -109,42 +126,34 @@ export default function UpdateArticle() {
                     contenido_markdown: data.contenido_markdown || '',
                     imagen_url: data.imagen_url || '',
                     autor: data.autor || '',
+                    autor_id: data.autor_id || '',
                     fecha_creacion: data.fecha_creacion || '',
                     fecha_actualizacion: data.fecha_actualizacion || '',
+                    tags: data.tags || []
                 });
 
-                // Set selected tags based on article tags
+                // Set selected tags
                 if (data.tags && data.tags.length > 0) {
-                    // First, extract the tag names from the article tags
                     const articleTagNames = data.tags.map((tag: Tag) => tag.nombre);
-                    addDebug(`Article has tags: ${articleTagNames.join(', ')}`);
-
-                    // Then find the corresponding tag IDs from allTags
-                    const tagIds = allTags
-                        .filter(tag => articleTagNames.includes(tag.nombre))
-                        .map(tag => tag._id as string);
-
-                    addDebug(`Mapped to tag IDs: ${tagIds.join(', ')}`);
+                    const tagIds = tagsData
+                        .filter((tag: Tag) => articleTagNames.includes(tag.nombre))
+                        .map((tag: Tag) => tag._id as string);
                     setSelectedTags(tagIds);
                 }
             } catch (error) {
-                console.error('Error fetching article:', error);
-                setError('Failed to load article');
+                setError('Failed to load article or tags');
             } finally {
                 setLoading(false);
             }
         };
 
-        if (allTags.length > 0) {
-            fetchArticle();
-        }
-    }, [id, allTags]);
+        checkAuthorization();
+    }, [id, userId, navigate]);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
 
-        // Clear error for this field when user starts typing
         if (formErrors[name as keyof FormErrors]) {
             setFormErrors(prev => ({
                 ...prev,
@@ -194,15 +203,6 @@ export default function UpdateArticle() {
             case 'heading3':
                 modifiedText = text.substring(0, start) + `### ${text.substring(start, end) || 'Encabezado nivel 3'}` + text.substring(end);
                 break;
-            case 'link':
-                modifiedText = text.substring(0, start) + `[${text.substring(start, end) || 'texto del enlace'}](https://ejemplo.com)` + text.substring(end);
-                break;
-            case 'code':
-                modifiedText = text.substring(0, start) + `\`\`\`\n${text.substring(start, end) || 'código'}\n\`\`\`` + text.substring(end);
-                break;
-            case 'blockquote':
-                modifiedText = text.substring(0, start) + `> ${text.substring(start, end) || 'cita'}` + text.substring(end);
-                break;
             case 'list':
                 modifiedText = text.substring(0, start) + `\n- ${text.substring(start, end) || 'Item 1'}\n- Item 2\n- Item 3` + text.substring(end);
                 break;
@@ -216,16 +216,14 @@ export default function UpdateArticle() {
                 return;
         }
 
-        setFormData(prev => ({...prev, contenido_markdown: modifiedText}));
+        setFormData(prev => ({ ...prev, contenido_markdown: modifiedText }));
 
-        // Clear content error if it exists
         if (formErrors.contenido_markdown) {
             setFormErrors(prev => ({ ...prev, contenido_markdown: undefined }));
         }
 
         addDebug(`Inserted ${markdownSyntax} markdown syntax`);
 
-        // Focus back on textarea after a short delay
         setTimeout(() => {
             textArea.focus();
             const newCursorPos = modifiedText.length;
@@ -235,9 +233,8 @@ export default function UpdateArticle() {
     };
 
     const handleImageUrlUpdate = (url: string) => {
-        setFormData(prev => ({...prev, imagen_url: url}));
+        setFormData(prev => ({ ...prev, imagen_url: url }));
 
-        // Clear image error if it exists
         if (formErrors.imagen_url) {
             setFormErrors(prev => ({ ...prev, imagen_url: undefined }));
         }
@@ -249,31 +246,22 @@ export default function UpdateArticle() {
         const errors: FormErrors = {};
         let isValid = true;
 
-        // Check title
         if (!formData.titulo || formData.titulo.trim() === '') {
             errors.titulo = "Title is required";
             isValid = false;
         }
-
-        // Check description
         if (!formData.descripcion || formData.descripcion.trim() === '') {
             errors.descripcion = "Description is required";
             isValid = false;
         }
-
-        // Check content
         if (!formData.contenido_markdown || formData.contenido_markdown.trim() === '') {
             errors.contenido_markdown = "Content is required";
             isValid = false;
         }
-
-        // Check image
         if (!formData.imagen_url) {
             errors.imagen_url = "Image is required";
             isValid = false;
         }
-
-        // Optional: validate tags
         if (selectedTags.length === 0) {
             errors.tags = "Select at least one tag";
             isValid = false;
@@ -293,7 +281,7 @@ export default function UpdateArticle() {
 
         if (!validateForm()) {
             addDebug("Form validation failed");
-            setMessage({ text: "Please fill in all required fields", type: "error" });
+            setAlert({ message: "Please fill in all required fields", type: "error" });
             return;
         }
 
@@ -305,7 +293,7 @@ export default function UpdateArticle() {
                 titulo: formData.titulo,
                 contenido_markdown: formData.contenido_markdown,
                 imagen_url: formData.imagen_url,
-                tags: selectedTags, // Send only the tag IDs
+                tags: selectedTags,
                 descripcion: formData.descripcion,
             };
 
@@ -322,10 +310,10 @@ export default function UpdateArticle() {
             addDebug(`Response received: ${JSON.stringify(result)}`);
 
             if (response.ok) {
-                setMessage({ text: "Article updated successfully!", type: "success" });
+                setAlert({ message: "Article updated successfully!", type: "success" });
                 navigate(`/articles/${id}`);
             } else {
-                setMessage({ text: `Error: ${result.error || 'Unknown error'}`, type: "error" });
+                setAlert({ message: `Error: ${result.error || 'Unknown error'}`, type: "error" });
             }
         } catch (err) {
             console.error('Error updating article:', err);
@@ -341,7 +329,19 @@ export default function UpdateArticle() {
     };
 
     if (loading) {
-        return <p>Loading...</p>;
+        return <div className="article-page">
+            <UserProfileBadge />
+            <h1>Update Article</h1>
+            <div className="spinner-wrapper" style={{ margin: "30px auto" }}>
+                <Spinner size="large" color="var(--primary-color)" />
+            </div>
+            <div className="article-skeleton">
+                <div className="skeleton-line title-line" style={{ height: "40px", width: "60%" }}></div>
+                <div className="skeleton-line" style={{ width: "80%", marginBottom: "20px" }}></div>
+                <div className="skeleton-line" style={{ width: "100%" }}></div>
+                <div className="skeleton-line" style={{ width: "100%" }}></div>
+            </div>
+        </div>;
     }
 
     if (error) {
@@ -359,13 +359,16 @@ export default function UpdateArticle() {
 
     return (
         <div className="article-page">
-            <UserProfileBadge/>
+            <UserProfileBadge />
             <h1>Update Article</h1>
 
-            {message && (
-                <div className={`message ${message.type}`}>
-                    {message.text}
-                </div>
+            {alert && (
+                <CustomAlert
+                    type={alert.type}
+                    message={alert.message}
+                    show={!!alert}
+                    onClose={() => setAlert(null)}
+                />
             )}
 
             <form onSubmit={handleSubmit}>
@@ -391,6 +394,7 @@ export default function UpdateArticle() {
                         onChange={handleChange}
                         rows={3}
                         maxLength={100}
+                        style={{resize: 'none'}}
                         className={formErrors.descripcion ? 'error-input' : ''}
                     ></textarea>
                     {formErrors.descripcion && <div className="error-message">{formErrors.descripcion}</div>}
@@ -453,15 +457,6 @@ export default function UpdateArticle() {
                         <button type="button" onClick={() => insertMarkdown('heading3')} title="Header 3">
                             H3
                         </button>
-                        <button type="button" onClick={() => insertMarkdown('link')} title="Link">
-                            🔗
-                        </button>
-                        <button type="button" onClick={() => insertMarkdown('code')} title="Code Block">
-                            &lt;/&gt;
-                        </button>
-                        <button type="button" onClick={() => insertMarkdown('blockquote')} title="Quote">
-                            💬
-                        </button>
                         <button type="button" onClick={() => insertMarkdown('list')} title="Bulleted List">
                             •
                         </button>
@@ -513,7 +508,7 @@ export default function UpdateArticle() {
             </form>
 
             {/* Debug Information */}
-            <div className="debug-info" style={{ marginTop: '30px', padding: '10px', background: '#f8f9fa', border: '1px solid #ddd' }}>
+            <div className="debug-info">
                 <h3>Debug Information</h3>
                 <pre style={{ maxHeight: '200px', overflow: 'auto' }}>
                     {debugInfo.map((msg, i) => (

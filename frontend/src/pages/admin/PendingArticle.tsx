@@ -4,6 +4,9 @@ import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import './PendingArticle.css';
 import { API_URL } from '../../api/config';
+import '../../App.css';
+import UserProfileBadge from '../../components/userInfo/UserProfileBadge';
+import { Spinner } from '../../components/Spinner';
 
 type PendingArticle = {
     _id: string;
@@ -54,7 +57,21 @@ export default function PendingArticle() {
     };
 
     if (loading) {
-        return <p>Loading...</p>;
+        return <div className="article-page">
+            <UserProfileBadge />
+            <h1>Article Review</h1>
+            <div className="spinner-wrapper" style={{ margin: "20px auto" }}>
+                <Spinner size="medium" color="var(--primary-color)" />
+            </div>
+            <div className="article-skeleton">
+                <div className="skeleton-line title-line" style={{ height: "40px", width: "70%" }}></div>
+                <div className="skeleton-line" style={{ width: "40%", marginBottom: "15px" }}></div>
+                <div className="article-image-placeholder" style={{ height: "250px", marginBottom: "20px" }}></div>
+                <div className="skeleton-line" style={{ width: "100%" }}></div>
+                <div className="skeleton-line" style={{ width: "90%" }}></div>
+                <div className="skeleton-line" style={{ width: "95%" }}></div>
+            </div>
+        </div>;
     }
 
     if (error) {

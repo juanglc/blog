@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API_URL } from '../../api/config';
+import { API_URL } from '../../../../api/config.ts';
 import './ArticleRequests.css';
+import '../../../../App.css';
 
 interface ArticleRequest {
     _id: string;

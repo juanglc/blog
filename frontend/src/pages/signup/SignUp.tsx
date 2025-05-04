@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignUp.css';
+import '../../App.css';
 
 const SignUp: React.FC = () => {
     const [formData, setFormData] = useState({

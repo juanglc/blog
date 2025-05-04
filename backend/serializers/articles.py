@@ -11,7 +11,7 @@ def serialize_article_full(article, users_collection, tags_collection):
     # Handle tags directly from the article document
     tags_info = []
     if 'tags' in article and article['tags']:
-        print(f"[DEBUG] Tags en el draft: {article['tags']}")
+        print(f"[DEBUG] Tags en el artículo: {article['tags']}")
         cursor = tags_collection.find({"_id": {"$in": article['tags']}})
         tags_info = [tag for tag in cursor]
     else:

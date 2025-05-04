@@ -55,6 +55,7 @@ def get_all_users(request):
 @api_view(['GET'])
 def get_user_by_id(request, user_id):
     try:
+        print(f"[DEBUG] Obteniendo usuario por ID: {user_id}")
         user = db.users.find_one({"_id": user_id})
         if not user:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)

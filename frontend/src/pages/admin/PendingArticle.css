@@ -1,22 +1,33 @@
 /* PendingArticle.css */
 .pending-article-page {
-    max-width: 800px;
-    margin: 0 auto;
+    max-width: none;
+    width: 100%;
+    margin: 0;
     padding: 20px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--background-color);
+    animation: fadeIn 0.5s ease-out;
+    min-height: 100vh;
+}
+
+.pending-article-page > * {
+    max-width: 800px;
+    width: 100%;
 }
 
 .pending-article-page > h1 {
-    font-size: 3.2rem;
+    font-size: 2.5rem;
     margin-bottom: 0.5rem;
-    color: white;
+    color: var(--text-color);
     font-weight: 700;
 }
 
 .pending-article-page p {
     font-size: 1.1rem;
     margin-bottom: 1.5rem;
+    color: var(--text-color);
 }
 
 .pending-article-image {
@@ -24,15 +35,29 @@
     max-width: 800px;
     height: auto;
     object-fit: contain;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     margin: 20px 0;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--box-shadow);
 }
 
 .pending-article-content {
     margin: 30px 0;
     font-size: 1.1rem;
-    color: white;
+}
+
+.pending-article-content code,
+.pending-article-content pre {
+    background-color: var(--card-bg);
+    border: 1px solid var(--primary-light);
+    border-radius: var(--border-radius);
+    padding: 0.2rem 0.4rem;
+    font-family: monospace;
+}
+
+.pending-article-content pre {
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
 }
 
 .pending-article-content h1 {
@@ -41,6 +66,7 @@
     margin-bottom: 1rem;
 }
 
+/* Ensure all elements inside markdown content use theme colors */
 .pending-article-content h1,
 .pending-article-content h2,
 .pending-article-content h3,
@@ -53,43 +79,76 @@
 .pending-article-content blockquote,
 .pending-article-content code,
 .pending-article-content pre {
-    color: white;
+    color: var(--text-color);
+}
+
+.pending-article-content a {
+    color: var(--primary-color);
 }
 
 .pending-article-tags {
     margin-top: 30px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--primary-light);
     padding-top: 20px;
+    opacity: 0.9;
 }
 
-.pending-article-tags .tags-container {
+.pending-article-tags h3 {
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+.tag-pill {
+    background-color: var(--primary-color);
+    border-radius: 30px;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    color: white;
+    display: inline-block;
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+
+.tags-container {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 10px;
 }
 
-.tag-pill {
-    background-color: #636363;
-    border-radius: 30px;
-    padding: 6px 14px;
-    font-size: 0.9rem;
-    color: white;
-}
-
 .back-button {
     padding: 10px 20px;
-    background-color: #6c757d;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1rem;
     transition: background-color 0.2s;
+    margin-top: 20px;
 }
 
 .back-button:hover {
-    background-color: #5a6268;
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+hr {
+    border-color: var(--primary-light);
+    opacity: 0.2;
+    margin: 1rem 0;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 768px) {

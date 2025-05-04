@@ -283,3 +283,13 @@ def delete_article(request, article_id):
     except Exception as e:
         print(f"[ERROR] Exception in delete_article: {e}")
         return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def get_author_by_article(request, article_id):
+    try:
+        article = db.articles.find_one({"_id": article_id}, {"autor_id": 1, "_id": 0})
+        if not article or "autor_id" not in article:
+            return Response({"error": "Author not found"}, status=404)
+        return Response({"autor_id": article["autor_id"]})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)

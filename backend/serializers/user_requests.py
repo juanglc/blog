@@ -9,6 +9,8 @@ def serialize_full_user_requests(request, users_collection):
         user = users_collection.find_one({"_id": request['user_id']})
         if user:
             print(f"[DEBUG] Usuario Encontrado")
+        else:
+            print(f"[DEBUG] Usuario no encontrado en la base de datos")
 
     # Create the serialized result
     result = {

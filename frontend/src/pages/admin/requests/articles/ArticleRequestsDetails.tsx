@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API_URL } from '../../api/config';
+import { API_URL } from '../../../../api/config.ts';
 import './ArticleRequestsDetails.css';
-import UserProfileBadge from '../../components/userInfo/UserProfileBadge';
+import UserProfileBadge from '../../../../components/userInfo/UserProfileBadge.tsx';
+import '../../../../App.css';
 
 const ArticleRequestDetails = () => {
     const { requestId } = useParams<{ requestId: string }>();
@@ -111,6 +112,7 @@ const ArticleRequestDetails = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}` } }
             );
+            setTimeout(() => navigate('/admin/article-requests'), 1500);
             navigate('/admin/article-requests');
         } catch (err) {
             console.error('Error creating or updating article:', err);
@@ -134,6 +136,7 @@ const ArticleRequestDetails = () => {
                     },
                 }
             );
+            setTimeout(() => navigate('/admin/article-requests'), 1500);
             navigate('/admin/article-requests');
         } catch (err) {
             console.error('Error rejecting request:', err);
@@ -145,7 +148,9 @@ const ArticleRequestDetails = () => {
 
     return (
         <div className="article-request-details">
-            <UserProfileBadge/>
+            <div className={"user-wrapper"}>
+                <UserProfileBadge/>
+            </div>
             <h1>Request Details</h1>
             <div className="request-details">
                 {Object.entries(request).map(([key, value]) => {
