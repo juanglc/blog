@@ -8,6 +8,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import NewArticle from './pages/articles/NewArticle';
 import UpdateArticle from "./pages/articles/UpdateArticle.tsx";
 import PendingArticle from './pages/admin/PendingArticle';
+import DraftsList from './pages/drafts/DraftsList.tsx'; // Import DraftsList component
 
 import ArticleRequests from './pages/admin/requests/articles/ArticleRequests.tsx';
 import ArticleRequestDetails from './pages/admin/requests/articles/ArticleRequestsDetails.tsx';
@@ -94,6 +95,11 @@ function App() {
                 } />
                 <Route path="/requests/articles/:requestId" element={
                     <PrivateRoute element={<ArticleDetails />} requireUserId={true} requiredRoles={['admin', 'escritor']}/>
+                } />
+
+                {/* Drafts route */}
+                <Route path="/drafts" element={
+                    <PrivateRoute element={<DraftsList />} requireUserId={true} requiredRoles={['admin', 'escritor']}/>
                 } />
 
                 {/* Protected routes */}

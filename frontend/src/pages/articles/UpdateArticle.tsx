@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import { useState, useEffect, FormEvent, ChangeEvent, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import ImageUploader from '../../components/ImageUploader.tsx';
@@ -8,6 +8,7 @@ import UserProfileBadge from "../../components/userInfo/UserProfileBadge.tsx";
 import '../../App.css';
 import { Spinner } from "../../components/Spinner.tsx";
 import { CustomAlert } from "../../components/alerts/Alerts.tsx";
+import axios from 'axios';
 
 type Tag = {
     nombre: string;
@@ -53,6 +54,12 @@ export default function UpdateArticle() {
     const [allTags, setAllTags] = useState<Tag[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+    // Auto-save related states
+    const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+    const [draftId, setDraftId] = useState<string | null>(null);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [savingStatus, setSavingStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = user._id;
 
@@ -77,6 +84,119 @@ export default function UpdateArticle() {
         setDebugInfo(prev => [...prev, `[${new Date().toISOString()}] ${message}`]);
     };
 
+    // Debounce utility function
+    function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
+        let timeout: ReturnType<typeof setTimeout> | null = null;
+
+        const debounced = (...args: Parameters<F>) => {
+            if (timeout !== null) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            timeout = setTimeout(() => func(...args), waitFor);
+        };
+
+        debounced.cancel = () => {
+            if (timeout !== null) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+        };
+
+        return debounced as F & { cancel: () => void };
+    }
+
+    // Auto-save function
+    const autoSaveDraft = useCallback(
+        debounce(async () => {
+            // Don't save if auto-save is disabled or if there's already a pending update
+            if (!autoSaveEnabled || hasPendingUpdate || (!formData.titulo && !formData.descripcion && !formData.contenido_markdown)) {
+                return;
+            }
+
+            try {
+                setSavingStatus('saving');
+                addDebug("Auto-saving draft...");
+
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                const autorId = userData._id || 'unknown';
+
+                // If we don't have a draft ID yet, check if one exists before creating
+                if (!draftId) {
+                    try {
+                        addDebug(`Checking for existing draft for article ID: ${id}`);
+                        const draftCheckResponse = await axios.get(`${API_URL}/api/drafts/check/${id}/`);
+
+                        if (draftCheckResponse.data.draft_id) {
+                            const existingDraftId = draftCheckResponse.data.draft_id;
+                            setDraftId(existingDraftId);
+                            addDebug(`Using existing draft with ID: ${existingDraftId}`);
+                        }
+                    } catch (checkError) {
+                        addDebug(`Error checking for existing draft: ${checkError}`);
+                        // Continue with creating a new draft if check fails
+                    }
+                }
+
+                const draftData = {
+                    titulo: formData.titulo,
+                    descripcion: formData.descripcion,
+                    contenido_markdown: formData.contenido_markdown,
+                    imagen_url: formData.imagen_url,
+                    tags: selectedTags,
+                    autor_id: autorId,
+                    fecha_creacion: new Date().toISOString(),
+                    tipo: "update",
+                    borrador: true,  // This is a draft
+                    id_articulo_original: id
+                };
+
+                let response;
+                if (draftId) {
+                    // Update existing draft - use correct endpoint
+                    response = await axios.put(
+                        `${API_URL}/api/drafts/update/${draftId}/`,
+                        draftData
+                    );
+                    addDebug(`Updated existing draft with ID: ${draftId}`);
+                } else {
+                    // Create new draft
+                    response = await axios.post(
+                        `${API_URL}/api/pending_articles/`,
+                        draftData
+                    );
+                    const newDraftId = response.data.pending_article._id;
+                    setDraftId(newDraftId);
+                    addDebug(`Created new draft with ID: ${newDraftId}`);
+                }
+
+                setLastSaved(new Date());
+                setSavingStatus('saved');
+
+                // Reset status after a delay
+                setTimeout(() => {
+                    if (setSavingStatus) {
+                        setSavingStatus('idle');
+                    }
+                }, 2000);
+
+            } catch (err: any) {
+                console.error('Error auto-saving draft:', err);
+                addDebug(`Error auto-saving: ${err.message}`);
+                setSavingStatus('error');
+            }
+        }, 2000),
+        [formData.titulo, formData.descripcion, formData.contenido_markdown, formData.imagen_url, selectedTags, id, draftId, autoSaveEnabled, hasPendingUpdate]
+    );
+
+    // Call auto-save when content changes
+    useEffect(() => {
+        if (formData.titulo || formData.descripcion || formData.contenido_markdown) {
+            autoSaveDraft();
+        }
+        return () => autoSaveDraft.cancel();
+    }, [formData, autoSaveDraft]);
+
     useEffect(() => {
         if (!id) {
             setError('Invalid article ID');
@@ -84,111 +204,145 @@ export default function UpdateArticle() {
             return;
         }
 
-        // First check if there's a pending update for this article
-        // First check if there's a pending update for this article
-        const checkPendingUpdates = async () => {
+        const initializeArticle = async () => {
             try {
-                addDebug(`Checking pending updates for article ID: ${id}`);
-                const pendingRes = await fetch(`${API_URL}/api/pending_articles/check/${id}/`);
+                setLoading(true);
 
-                // Handle both 400 and 500 responses as indicators of pending updates
-                if (!pendingRes.ok) {
-                    let errorMessage = "Error checking pending updates";
+                // Step 1: Check for existing draft
+                let draftData = null;
+                try {
+                    addDebug(`Checking for existing draft for article ID: ${id}`);
+                    const draftCheckResponse = await axios.get(`${API_URL}/api/drafts/check/${id}/`);
 
-                    try {
-                        const pendingData = await pendingRes.json();
-                        errorMessage = pendingData.error || errorMessage;
-                        addDebug(`Pending update check failed: ${errorMessage}`);
-                    } catch (parseError) {
-                        addDebug(`Error parsing response: ${parseError}`);
+                    if (draftCheckResponse.data.draft_id) {
+                        const draftId = draftCheckResponse.data.draft_id;
+                        setDraftId(draftId);
+                        addDebug(`Found existing draft with ID: ${draftId}`);
+
+                        // Load the draft data
+                        const draftResponse = await axios.get(`${API_URL}/api/drafts/${draftId}/`);
+                        draftData = draftResponse.data;
+                        addDebug(`Loaded draft data: ${JSON.stringify(draftData)}`);
+                    } else {
+                        addDebug('No existing draft found');
                     }
+                } catch (error) {
+                    addDebug(`Error checking for existing draft: ${error}`);
+                    // Continue even if draft check fails
+                }
 
-                    // If status is 400 or 500, consider it as having a pending update
-                    if (pendingRes.status === 400 || pendingRes.status === 500) {
+                // Step 2: Check for pending updates
+                try {
+                    addDebug(`Checking pending updates for article ID: ${id}`);
+                    const pendingRes = await fetch(`${API_URL}/api/pending_articles/check/${id}/`);
+
+                    if (pendingRes.status === 400) {
                         setHasPendingUpdate(true);
                         addDebug('There is already a pending update for this article');
                     }
+                } catch (error) {
+                    addDebug(`Error checking pending updates: ${error}`);
                 }
 
-                // Continue with authorization check
-                checkAuthorization();
-            } catch (error) {
-                addDebug(`Error checking pending updates: ${error}`);
-                // Continue with authorization check even if this fails
-                checkAuthorization();
-            }
-        };
+                // Step 3: Check authorization
+                try {
+                    addDebug(`Checking authorization for article ID: ${id}`);
+                    const res = await fetch(`${API_URL}/api/articles/get/author/${id}/`);
+                    if (!res.ok) throw new Error('Failed to fetch author');
+                    const { autor_id } = await res.json();
 
-        // Step 1: Fetch only autor_id for authorization
-        const checkAuthorization = async () => {
-            try {
-                addDebug(`Checking authorization for article ID: ${id}`);
-                const res = await fetch(`${API_URL}/api/articles/get/author/${id}/`);
-                if (!res.ok) throw new Error('Failed to fetch author');
-                const { autor_id } = await res.json();
-
-                if (userId && userId !== autor_id) {
-                    navigate(`/articles`, {
-                        state: {
-                            message: "You are not authorized to edit this article.",
-                            alertType: "warning"
-                        }
-                    });
+                    if (userId && userId !== autor_id) {
+                        navigate(`/articles`, {
+                            state: {
+                                message: "You are not authorized to edit this article.",
+                                alertType: "warning"
+                            }
+                        });
+                        return;
+                    }
+                } catch (error) {
+                    setError('Authorization check failed');
+                    setLoading(false);
                     return;
                 }
 
-                // Step 2: Fetch tags and article only if authorized
-                fetchTagsAndArticle();
-            } catch (error) {
-                setError('Authorization check failed');
-                setLoading(false);
-            }
-        };
+                // Step 4: Load tags
+                try {
+                    const tagsRes = await fetch(`${API_URL}/api/tags/`);
+                    if (!tagsRes.ok) throw new Error('Failed to fetch tags');
+                    const tagsData = await tagsRes.json();
+                    setAllTags(tagsData);
+                    addDebug(`Loaded ${tagsData.length} tags`);
+                } catch (error) {
+                    addDebug(`Error loading tags: ${error}`);
+                    // Continue anyway
+                }
 
-        const fetchTagsAndArticle = async () => {
-            try {
-                // Fetch tags
-                const tagsRes = await fetch(`${API_URL}/api/tags/`);
-                if (!tagsRes.ok) throw new Error('Failed to fetch tags');
-                const tagsData = await tagsRes.json();
-                setAllTags(tagsData);
+                // Step 5: Set form data - prioritize draft if exists
+                if (draftData) {
+                    // Populate form with draft data
+                    setFormData({
+                        titulo: draftData.titulo || '',
+                        descripcion: draftData.descripcion || '',
+                        contenido_markdown: draftData.contenido_markdown || '',
+                        imagen_url: draftData.imagen_url || '',
+                        autor: draftData.autor || '',
+                        autor_id: draftData.autor_id || '',
+                        fecha_creacion: draftData.fecha_creacion || '',
+                        fecha_actualizacion: draftData.fecha_actualizacion || ''
+                    });
 
-                // Fetch article
-                addDebug(`Fetching article with ID: ${id}`);
-                const articleRes = await fetch(`${API_URL}/api/articles/${id}`);
-                if (!articleRes.ok) throw new Error('Failed to fetch article');
-                const data = await articleRes.json();
-                setArticle(data);
+                    // Set tags from draft
+                    if (draftData.tags && Array.isArray(draftData.tags)) {
+                        const tagIds = draftData.tags.map((tag: any) =>
+                            typeof tag === 'object' && tag._id ? tag._id : tag
+                        );
+                        setSelectedTags(tagIds);
+                        addDebug(`Loaded tags from draft: ${tagIds.join(', ')}`);
+                    }
+                } else {
+                    // Load article data if no draft exists
+                    try {
+                        addDebug(`No draft data available, loading original article with ID: ${id}`);
+                        const articleRes = await fetch(`${API_URL}/api/articles/${id}`);
+                        if (!articleRes.ok) throw new Error('Failed to fetch article');
+                        const data = await articleRes.json();
+                        setArticle(data);
 
-                // Initialize form with article data
-                setFormData({
-                    titulo: data.titulo || '',
-                    descripcion: data.descripcion || '',
-                    contenido_markdown: data.contenido_markdown || '',
-                    imagen_url: data.imagen_url || '',
-                    autor: data.autor || '',
-                    autor_id: data.autor_id || '',
-                    fecha_creacion: data.fecha_creacion || '',
-                    fecha_actualizacion: data.fecha_actualizacion || '',
-                    tags: data.tags || []
-                });
+                        // Initialize form with article data
+                        setFormData({
+                            titulo: data.titulo || '',
+                            descripcion: data.descripcion || '',
+                            contenido_markdown: data.contenido_markdown || '',
+                            imagen_url: data.imagen_url || '',
+                            autor: data.autor || '',
+                            autor_id: data.autor_id || '',
+                            fecha_creacion: data.fecha_creacion || '',
+                            fecha_actualizacion: data.fecha_actualizacion || ''
+                        });
 
-                // Set selected tags
-                if (data.tags && data.tags.length > 0) {
-                    const articleTagNames = data.tags.map((tag: Tag) => tag.nombre);
-                    const tagIds = tagsData
-                        .filter((tag: Tag) => articleTagNames.includes(tag.nombre))
-                        .map((tag: Tag) => tag._id as string);
-                    setSelectedTags(tagIds);
+                        // Set selected tags
+                        if (data.tags && data.tags.length > 0) {
+                            const tagIds = data.tags.map((tag: Tag) =>
+                                typeof tag === 'object' && tag._id ? tag._id : tag
+                            );
+                            setSelectedTags(tagIds);
+                            addDebug(`Loaded tags from article: ${tagIds.join(', ')}`);
+                        }
+                    } catch (error) {
+                        setError('Failed to load article');
+                        addDebug(`Error loading article: ${error}`);
+                    }
                 }
             } catch (error) {
-                setError('Failed to load article or tags');
+                setError(`An error occurred: ${error}`);
+                addDebug(`Initialization error: ${error}`);
             } finally {
                 setLoading(false);
             }
         };
 
-        checkPendingUpdates();
+        initializeArticle();
     }, [id, userId, navigate]);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -330,82 +484,105 @@ export default function UpdateArticle() {
         addDebug("Form validated, starting submission");
 
         try {
-            // Get user data from localStorage
-            const userData = JSON.parse(localStorage.getItem('user') || '{}');
-            const autorId = userData._id || 'unknown';
+            // Use push_draft if we have a draft, otherwise create one and then push it
+            if (draftId) {
+                addDebug(`Pushing existing draft: ${draftId}`);
 
-            // Create pending article data
-            const pendingArticleData = {
-                titulo: formData.titulo,
-                descripcion: formData.descripcion,
-                contenido_markdown: formData.contenido_markdown,
-                imagen_url: formData.imagen_url,
-                tags: selectedTags,
-                autor_id: autorId,
-                fecha_creacion: new Date().toISOString(),
-                tipo: "update",
-                borrador: false,
-                id_articulo_original: id
-            };
+                // First update the draft with latest values
+                await axios.put(
+                    `${API_URL}/api/drafts/update/${draftId}/`,
+                    {
+                        titulo: formData.titulo,
+                        descripcion: formData.descripcion,
+                        contenido_markdown: formData.contenido_markdown,
+                        imagen_url: formData.imagen_url,
+                        tags: selectedTags,
+                        borrador: false  // No longer a draft
+                    }
+                );
 
-            addDebug(`Sending pending article data: ${JSON.stringify(pendingArticleData)}`);
+                // Then push the draft (converts to pending article and creates request)
+                const pushResponse = await axios.post(
+                    `${API_URL}/api/drafts/push/${draftId}/`
+                );
 
-            // Create pending article
-            const pendingResponse = await fetch(`${API_URL}/api/pending_articles/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(pendingArticleData),
-            });
+                addDebug(`Draft pushed successfully: ${JSON.stringify(pushResponse.data)}`);
 
-            const pendingResult = await pendingResponse.json();
+                // Mark form as submitted to prevent further edits
+                setFormSubmitted(true);
 
-            if (!pendingResponse.ok) {
-                throw new Error(pendingResult.error || 'Failed to create pending article');
+                setAlert({
+                    message: "Your update request has been submitted successfully!",
+                    type: "success"
+                });
+
+                // Navigate after a short delay
+                setTimeout(() => {
+                    navigate(`/articles/${id}`);
+                }, 1500);
+            } else {
+                // No draft exists, create a new one and push it
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                const autorId = userData._id || 'unknown';
+
+                // Create new pending article
+                const pendingArticleData = {
+                    titulo: formData.titulo,
+                    descripcion: formData.descripcion,
+                    contenido_markdown: formData.contenido_markdown,
+                    imagen_url: formData.imagen_url,
+                    tags: selectedTags,
+                    autor_id: autorId,
+                    fecha_creacion: new Date().toISOString(),
+                    tipo: "update",
+                    borrador: false,
+                    id_articulo_original: id
+                };
+
+                const pendingResponse = await axios.post(
+                    `${API_URL}/api/pending_articles/`,
+                    pendingArticleData
+                );
+
+                const pendingArticleId = pendingResponse.data.pending_article._id;
+                addDebug(`Created new pending article with ID: ${pendingArticleId}`);
+
+                // Create the article request using the pending article ID
+                const articleRequestData = {
+                    autor_id: autorId,
+                    tipo: "update",
+                    id_articulo_nuevo: pendingArticleId,
+                    id_articulo_original: id
+                };
+
+                addDebug(`Sending article request data: ${JSON.stringify(articleRequestData)}`);
+
+                const requestResponse = await axios.post(
+                    `${API_URL}/api/requests/articles/`,
+                    articleRequestData
+                );
+
+                const requestResult = requestResponse.data;
+
+                if (requestResponse.status >= 400) {
+                    throw new Error(requestResult.error || 'Failed to create article request');
+                }
+
+                addDebug(`Article request created successfully: ${JSON.stringify(requestResult)}`);
+
+                // Mark form as submitted to prevent further edits
+                setFormSubmitted(true);
+
+                setAlert({
+                    message: "Your update request has been submitted for approval.",
+                    type: "success"
+                });
+
+                // Navigate after a short delay
+                setTimeout(() => {
+                    navigate(`/articles/${id}`);
+                }, 1500);
             }
-
-            const pendingArticle = pendingResult.pending_article;
-            addDebug(`Pending article created with ID: ${pendingArticle._id}`);
-
-            // Create article request
-            const articleRequestData = {
-                autor_id: autorId,
-                tipo: "update",
-                id_articulo_nuevo: pendingArticle._id,
-                id_articulo_original: id
-            };
-
-            addDebug(`Sending article request data: ${JSON.stringify(articleRequestData)}`);
-
-            const requestResponse = await fetch(`${API_URL}/api/requests/articles/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(articleRequestData),
-            });
-
-            const requestResult = await requestResponse.json();
-
-            if (!requestResponse.ok) {
-                throw new Error(requestResult.error || 'Failed to create article request');
-            }
-
-            addDebug(`Article request created successfully: ${JSON.stringify(requestResult)}`);
-
-            // Mark form as submitted to prevent further edits
-            setFormSubmitted(true);
-
-            setAlert({
-                message: "Your update request has been submitted for approval.",
-                type: "success"
-            });
-
-            // Navigate after a short delay
-            setTimeout(() => {
-                navigate(`/articles/${id}`);
-            }, 4000);
         } catch (err: any) {
             console.error('Error updating article:', err);
             setError('Failed to update article');
@@ -497,7 +674,7 @@ export default function UpdateArticle() {
         );
     }
 
-    if (!article) {
+    if (!article && !draftId) {
         return <p>Article not found.</p>;
     }
 
@@ -516,6 +693,24 @@ export default function UpdateArticle() {
                     onClose={() => setAlert(null)}
                 />
             )}
+
+            {/* Auto-save status indicator */}
+            <div className="auto-save-status">
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={autoSaveEnabled}
+                        onChange={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                    />
+                    Auto-save draft
+                </label>
+                <span className={`save-status ${savingStatus}`}>
+                    {savingStatus === 'saving' && 'Saving...'}
+                    {savingStatus === 'saved' && `Saved at ${lastSaved?.toLocaleTimeString()}`}
+                    {savingStatus === 'error' && 'Error saving draft'}
+                    {draftId && savingStatus === 'idle' && lastSaved && `Last saved at ${lastSaved.toLocaleTimeString()}`}
+                </span>
+            </div>
 
             <form onSubmit={handleSubmit}>
                 <div className={`form-group ${formErrors.titulo ? 'has-error' : ''}`}>

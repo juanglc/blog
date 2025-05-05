@@ -9,6 +9,7 @@ def serialize_drafts_full(draft, users_collections, tags_collection):
         print(f"[DEBUG] Autor encontrado: {author}")
     else:
         print(f"[DEBUG] Autor no encontrado")
+
     # Handle tags directly from the drawer document
     tags_info = []
     if 'tags' in draft and draft['tags']:
@@ -20,7 +21,7 @@ def serialize_drafts_full(draft, users_collections, tags_collection):
 
     # Format the drawer with the enriched information
     result = {
-        "id": draft["_id"],
+        "_id": draft["_id"],  # Changed from "id" to "_id" to match expected field
         "titulo": draft.get("titulo", ""),
         "contenido_markdown": draft.get("contenido_markdown", ""),
         "imagen_url": draft.get("imagen_url", ""),
@@ -28,7 +29,11 @@ def serialize_drafts_full(draft, users_collections, tags_collection):
         "autor": author.get("nombre") if author else "",
         "autor_id": draft.get("autor_id", ""),
         "fecha_creacion": draft.get("fecha_creacion", ""),
+        "fecha_actualizacion": draft.get("fecha_actualizacion", ""), # Added this field
         "descripcion": draft.get("descripcion", ""),
+        "tipo": draft.get("tipo", "nuevo"),  # Added this field
+        "borrador": draft.get("borrador", True),  # Added this field
+        "id_articulo_original": draft.get("id_articulo_original", ""),  # Added this field
     }
 
     print(f"[DEBUG] Resultado serializado: {result}")

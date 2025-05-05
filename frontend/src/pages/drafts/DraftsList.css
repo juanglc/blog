@@ -1,0 +1,212 @@
+/* DraftsList.css */
+.drafts-page {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--background-color);
+    animation: fadeIn 0.5s ease-out;
+    min-height: 100vh;
+}
+
+.drafts-page > * {
+    max-width: 800px;
+    width: 100%;
+}
+
+.drafts-page h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    font-weight: 700;
+    text-align: center;
+    padding-top: 1rem;
+}
+
+.drafts-actions {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.primary-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+}
+
+.primary-button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.secondary-button {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+    border: 1px solid var(--primary-light);
+}
+
+.secondary-button:hover {
+    background-color: var(--primary-light);
+    color: white;
+}
+
+.drafts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.draft-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.draft-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.draft-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.draft-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--text-color);
+}
+
+.draft-type {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.draft-type.new {
+    background-color: #4caf50;
+    color: white;
+}
+
+.draft-type.update {
+    background-color: #2196f3;
+    color: white;
+}
+
+.draft-description {
+    color: var(--text-color);
+    opacity: 0.9;
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+
+.draft-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-bottom: 15px;
+}
+
+.draft-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.edit-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+}
+
+.edit-button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.delete-button {
+    background-color: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+}
+
+.no-drafts {
+    text-align: center;
+    padding: 30px;
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .drafts-page h1 {
+        font-size: 2rem;
+    }
+
+    .draft-meta {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .draft-actions {
+        flex-direction: column;
+    }
+
+    .edit-button, .delete-button {
+        width: 100%;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

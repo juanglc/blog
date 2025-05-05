@@ -184,13 +184,26 @@ const ArticleRequestsPage = () => {
                                     {request._id}
                                 </td>
                                 <td>{getRequestTypeLabel(request.tipo)}</td>
-                                {filter === 'approved' && (
+                                {filter === 'approved' && request?.tipo === 'nuevo' && (
                                     <td>
                                         <button
                                             className="view-article-button"
                                             onClick={(e) => {
                                                 e.stopPropagation(); // Prevent row click
                                                 navigate(`/articles/${request.id_articulo_nuevo}`);
+                                            }}
+                                        >
+                                            View Article
+                                        </button>
+                                    </td>
+                                )}
+                                {filter === 'approved' && request?.tipo === 'update' && (
+                                    <td>
+                                        <button
+                                            className="view-article-button"
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Prevent row click
+                                                navigate(`/articles/${request.id_articulo_original}`);
                                             }}
                                         >
                                             View Article

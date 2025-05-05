@@ -182,13 +182,12 @@ def pending_to_draft(request, pa_id):
 @api_view(['GET'])
 def check_pending_update(request, pending_article_id):
     try:
-        # Buscar solo el _id del artículo con estado "pendiente"
-        result = db.pending_articles.find_one(
-            {"id_articulo_original": pending_article_id, "estado": "pendiente"},
+        result = list(db.pending_articles.find(
+            {"id_articulo_original": pending_article_id, "estado": "pendiente", "borrador": False},
             {"_id": 1}
-        )
+        ))
 
-        if result:
+        if len(result) > 0:  # .count() está deprecado en pymongo 4.x, mejor usar next()
             return JsonResponse({"error": "Ya existe una solicitud pendiente para este artículo"}, status=400)
 
         return JsonResponse({"message": "No hay solicitudes pendientes para este artículo"}, status=200)

@@ -145,15 +145,6 @@ const ArticleRequestDetails = () => {
                 );
             }
 
-            await axios.delete(
-                `${API_URL}/api/pending_articles/${request.pending_article._id}/`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
-
             navigate('/admin/article-requests');
         } catch (err) {
             console.error('Error creating or updating article:', err);
@@ -245,8 +236,17 @@ const ArticleRequestDetails = () => {
                 </button>
             )}
 
+            {request?.id_articulo_original && request?.estado === 'aprobado' && request?.tipo === 'update' && (
+                <button
+                    className="view-original-article-button"
+                    onClick={() => navigate(`/articles/${request.id_articulo_original}`)}
+                >
+                    View Approved Article
+                </button>
+            )}
+
             {/* For approved requests, show the approved article button */}
-            {request?.id_articulo_nuevo && request?.estado === 'aprobado' && (
+            {request?.id_articulo_nuevo && request?.estado === 'aprobado' && request?.tipo === 'nuevo' && (
                 <button
                     className="view-article-button"
                     onClick={() => navigate(`/articles/${request.id_articulo_nuevo}`)}

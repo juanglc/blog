@@ -1,5 +1,5 @@
-import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, FormEvent, ChangeEvent, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import ImageUploader from '../../components/ImageUploader.tsx';
@@ -27,13 +27,14 @@ type FormErrors = {
 export default function NewArticle() {
     const [formSubmitted, setFormSubmitted] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [content, setContent] = useState('');
     const [imageUrl, setImageUrl] = useState('');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [formErrors, setFormErrors] = useState<FormErrors>({});
     const [showPreview, setShowPreview] = useState(false);
     const [debugInfo, setDebugInfo] = useState<string[]>([]);
@@ -41,18 +42,27 @@ export default function NewArticle() {
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState<"success" | "error" | "info" | "warning">("info");
 
+    // Auto-save related states
+    const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+    const [draftId, setDraftId] = useState<string | null>(null);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [savingStatus, setSavingStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
     const addDebug = (message: string) => {
         console.log(`[DEBUG] ${message}`);
         setDebugInfo(prev => [...prev, `[${new Date().toISOString()}] ${message}`]);
     };
 
-
-
     useEffect(() => {
+        // Get draft ID from URL query parameter
+        const queryParams = new URLSearchParams(location.search);
+        const draftParam = queryParams.get('draft');
+        // Load available tags
         axios.get(`${API_URL}/api/tags/`)
             .then(res => {
                 setAvailableTags(res.data);
                 addDebug(`Fetched ${res.data.length} tags`);
+                setIsLoading(false);
             })
             .catch(err => {
                 console.error('Error fetching tags:', err);
@@ -60,8 +70,128 @@ export default function NewArticle() {
                 setAlertMessage("Failed to load tags. Please refresh and try again.");
                 setAlertType("error");
                 setShowAlert(true);
+                setIsLoading(false);
             });
-    }, []);
+
+        // Inside the useEffect where you load the draft
+        if (draftParam) {
+            setDraftId(draftParam);
+            addDebug(`Loading draft with ID: ${draftParam}`);
+
+            // Fetch the draft data
+            axios.get(`${API_URL}/api/drafts/${draftParam}/`)
+                .then(response => {
+                    const draftData = response.data;
+                    addDebug(`Loaded draft data: ${JSON.stringify(draftData)}`);
+
+                    // Set form fields from draft
+                    setTitle(draftData.titulo || '');
+                    setDescription(draftData.descripcion || '');
+                    setContent(draftData.contenido_markdown || '');
+                    setImageUrl(draftData.imagen_url || '');
+
+                    if (draftData.tags && Array.isArray(draftData.tags)) {
+                        // Check if tags are objects with _id properties or just strings
+                        const tagIds = draftData.tags.map((tag: any) =>
+                            typeof tag === 'object' && tag._id ? tag._id : tag
+                        );
+                        setSelectedTags(tagIds);
+                        addDebug(`Loaded tags from draft: ${tagIds.join(', ')}`);
+                    }
+
+                    setIsLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error loading draft:', error);
+                    addDebug(`Error loading draft: ${error.message}`);
+                    setAlertMessage("Failed to load draft. Please try again.");
+                    setAlertType("error");
+                    setShowAlert(true);
+                    setIsLoading(false);
+                });
+        } else {
+            setIsLoading(false);
+        }
+    }, [location.search]);
+
+    // Debounced auto-save function
+    const autoSaveDraft = useCallback(
+        async (formData: {
+            title: string,
+            description: string,
+            content: string,
+            imageUrl: string,
+            tags: string[]
+        }) => {
+            if (!autoSaveEnabled || !formData.title) return;
+
+            try {
+                setSavingStatus('saving');
+                addDebug('Auto-saving draft...');
+
+                // Get user data from localStorage
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                const autorId = userData._id || 'unknown';
+
+                const draftData = {
+                    titulo: formData.title,
+                    descripcion: formData.description,
+                    contenido_markdown: formData.content,
+                    imagen_url: formData.imageUrl,
+                    tags: formData.tags,
+                    autor_id: autorId,
+                    fecha_creacion: new Date().toISOString(),
+                    tipo: "nuevo",
+                    borrador: true
+                };
+
+                let response;
+
+                if (draftId) {
+                    // Update existing draft
+                    response = await axios.put(
+                        `${API_URL}/api/drafts/update/${draftId}/`,
+                        draftData
+                    );
+                    addDebug(`Updated draft with ID: ${draftId}`);
+                } else {
+                    // Create new draft
+                    response = await axios.post(
+                        `${API_URL}/api/pending_articles/`,
+                        draftData
+                    );
+                    const newDraftId = response.data.pending_article._id;
+                    setDraftId(newDraftId);
+                    addDebug(`Created new draft with ID: ${newDraftId}`);
+                }
+
+                setLastSaved(new Date());
+                setSavingStatus('saved');
+            } catch (err) {
+                console.error('Auto-save error:', err);
+                addDebug(`Auto-save error: ${err}`);
+                setSavingStatus('error');
+            }
+        },
+        [draftId, autoSaveEnabled]
+    );
+
+    // Debounce effect for auto-save
+    useEffect(() => {
+        if (!title) return;
+
+        const timeoutId = setTimeout(() => {
+            autoSaveDraft({
+                title,
+                description,
+                content,
+                imageUrl,
+                tags: selectedTags
+            });
+        }, 3000); // 3 seconds delay
+
+        return () => clearTimeout(timeoutId);
+    }, [title, description, content, imageUrl, selectedTags, autoSaveDraft]);
 
     const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
@@ -105,6 +235,11 @@ export default function NewArticle() {
         if (formErrors.imagen_url) {
             setFormErrors({...formErrors, imagen_url: undefined});
         }
+    };
+
+    const toggleAutoSave = () => {
+        setAutoSaveEnabled(!autoSaveEnabled);
+        addDebug(`Auto-save ${!autoSaveEnabled ? 'enabled' : 'disabled'}`);
     };
 
     const insertMarkdown = (markdownSyntax: string) => {
@@ -219,44 +354,63 @@ export default function NewArticle() {
         addDebug("Form validated, starting submission");
 
         try {
-            // Get user data from localStorage
             const userData = JSON.parse(localStorage.getItem('user') || '{}');
             const autorId = userData._id || 'unknown';
 
-            // Create the pending article data with direct tag IDs (not objects)
-            const pendingArticleData = {
-                titulo: title,
-                descripcion: description,
-                contenido_markdown: content,
-                imagen_url: imageUrl,
-                tags: selectedTags,  // Send tags directly as string array
-                autor_id: autorId,
-                fecha_creacion: new Date().toISOString(),
-                tipo: "nuevo",
-                borrador: false
-            };
+            let pendingArticleId;
 
-            addDebug(`Sending pending article data: ${JSON.stringify(pendingArticleData)}`);
+            // If we have a draft, update it instead of creating a new one
+            if (draftId) {
+                addDebug(`Using existing draft: ${draftId}`);
 
-            // Create pending article
-            const pendingResponse = await axios.post(
-                `${API_URL}/api/pending_articles/`,
-                pendingArticleData
-            );
+                // Update draft but set borrador: false
+                const updateData = {
+                    titulo: title,
+                    descripcion: description,
+                    contenido_markdown: content,
+                    imagen_url: imageUrl,
+                    tags: selectedTags,
+                    autor_id: autorId,
+                    fecha_actualizacion: new Date().toISOString(),
+                    tipo: "nuevo",
+                    borrador: false  // No longer a draft
+                };
 
-            const pendingArticle = pendingResponse.data.pending_article;
-            addDebug(`Pending article created with ID: ${pendingArticle._id}`);
+                await axios.put(`${API_URL}/api/drafts/update/${draftId}/`, updateData);
+                pendingArticleId = draftId;
+                addDebug(`Updated draft ${draftId} to be a formal submission`);
+            } else {
+                // Create new pending article (not a draft)
+                const pendingArticleData = {
+                    titulo: title,
+                    descripcion: description,
+                    contenido_markdown: content,
+                    imagen_url: imageUrl,
+                    tags: selectedTags,
+                    autor_id: autorId,
+                    fecha_creacion: new Date().toISOString(),
+                    tipo: "nuevo",
+                    borrador: false
+                };
 
-            // Create article request with correct endpoint and no '_id' field
+                const pendingResponse = await axios.post(
+                    `${API_URL}/api/pending_articles/`,
+                    pendingArticleData
+                );
+
+                pendingArticleId = pendingResponse.data.pending_article._id;
+                addDebug(`Created new pending article with ID: ${pendingArticleId}`);
+            }
+
+            // Create article request with the pending article ID
             const articleRequestData = {
                 autor_id: autorId,
                 tipo: "nuevo",
-                id_articulo_nuevo: pendingArticle._id
+                id_articulo_nuevo: pendingArticleId
             };
 
             addDebug(`Sending article request data: ${JSON.stringify(articleRequestData)}`);
 
-            // Use the correct endpoint without 'create/'
             const articleRequestResponse = await axios.post(
                 `${API_URL}/api/requests/articles/`,
                 articleRequestData
@@ -362,6 +516,23 @@ export default function NewArticle() {
                 />
             )}
 
+            {/* Add this near the form */}
+            <div className="auto-save-status">
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={autoSaveEnabled}
+                        onChange={toggleAutoSave}
+                    />
+                    Auto-save draft
+                </label>
+                <span className={`save-status ${savingStatus}`}>
+                    {savingStatus === 'saving' && 'Saving...'}
+                    {savingStatus === 'saved' && `Saved ${lastSaved?.toLocaleTimeString()}`}
+                    {savingStatus === 'error' && 'Error saving'}
+                </span>
+            </div>
+
             <form onSubmit={handleSubmit}>
                 <div className={`form-group ${formErrors.titulo ? 'has-error' : ''}`}>
                     <label htmlFor="titulo">Title <span className="required-field">*</span></label>
@@ -393,6 +564,7 @@ export default function NewArticle() {
                     <label>Image <span className="required-field">*</span></label>
                     <ImageUploader
                         onImageUploaded={handleImageUrlUpdate}
+                        existingImageUrl={imageUrl}
                         required={true}
                     />
                     {formErrors.imagen_url && <div className="error-message">{formErrors.imagen_url}</div>}

@@ -337,7 +337,7 @@ def reject_article_request(request, request_id):
         # Update pending article status using the ID from request body
         db.pending_articles.update_one(
             {"_id": pending_article_id},
-            {"$set": {"estado": "denegado"}}
+            {"$set": {"estado": "pendiente", "borrador": True}}
         )
         return JsonResponse({"message": "Solicitud rechazada exitosamente"}, status=200)
 
@@ -423,7 +423,7 @@ def cancel_article_request(request, request_id):
         # Update the article request status to "cancelado"
         db.article_requests.update_one(
             {"_id": request_id},
-            {"$set": {"estado": "cancelado"}}
+            {"$set": {"estado": "cancelado", "borrador": True}}
         )
 
         return JsonResponse({"message": "Solicitud cancelada exitosamente"}, status=200)

@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from serializers.drafts import serialize_drafts_full
 from datetime import datetime
+from rest_framework import status
 
 client = MongoClient(settings.MONGO_URI)
 db = client["blog_db"]
@@ -16,7 +17,8 @@ def get_all_drafts(request, autor_id):
         per_page = int(request.query_params.get('per_page', 9))
         skip = (page - 1) * per_page
         drafts = list(db.pending_articles.find({"borrador": True, "autor_id": autor_id}).sort('fecha_creacion', -1).skip(skip).limit(per_page))
-        total_drafts = db.pending_articles.count_documents({"borrador": True, "autor_id": autor_id})
+        print(f"[DEBUG] Drafts found: {drafts}")
+        total_drafts = len(drafts)
 
         if not drafts:
             return Response({
@@ -87,9 +89,18 @@ def update_draft(request, draft_id):
             updates['imagen_url'] = data['imagen_url']
             print(f"[DEBUG] Updating imagen_url: {data['imagen_url']}")
 
+        # Transform tags from array of objects to array of strings
         if 'tags' in data:
-            updates['tags'] = data['tags']
-            print(f"[DEBUG] Updating tags directly: {data['tags']}")
+            original_tags = data.get("tags", [])
+            transformed_tags = []
+            for tag in original_tags:
+                if isinstance(tag, dict) and "_id" in tag:
+                    transformed_tags.append(tag["_id"])
+                elif isinstance(tag, str):
+                    transformed_tags.append(tag)
+
+            updates['tags'] = transformed_tags
+            print(f"[DEBUG] Updating tags: {transformed_tags}")
 
         if 'descripcion' in data and data['descripcion'] != draft.get('descripcion'):
             updates['descripcion'] = data['descripcion']
@@ -182,3 +193,25 @@ def delete_draft(request, draft_id):
     except Exception as e:
         print(f"[ERROR] Exception in delete_draft: {e}")
         return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def check_draft(request, id_original):
+    try:
+        # Find existing draft for this article
+        draft = db.pending_articles.find_one({
+            'id_articulo_original': id_original,
+            'borrador': True
+        })
+
+        if draft:
+            # Use str() to convert ObjectId to string explicitly
+            draft_id = str(draft['_id'])
+            return Response({"draft_id": draft_id}, status=status.HTTP_200_OK)
+        else:
+            return Response({"draft_id": None}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        import traceback
+        print(f"Error checking draft: {str(e)}")
+        print(traceback.format_exc())  # Print full stack trace
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
