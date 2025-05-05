@@ -1,0 +1,315 @@
+.article-section {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--background-color);
+    animation: fadeIn 0.5s ease-out;
+    min-height: 100vh;
+}
+
+.article-section > * {
+    max-width: 1200px;
+    width: 100%;
+}
+
+.article-title-main {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    font-weight: 700;
+    text-align: center;
+    padding-top: 1rem;
+}
+
+.article-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+    margin: 20px 0;
+}
+
+.article-card {
+    background-color: var(--secondary-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.article-card img.article-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+}
+
+.article-card .article-content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.article-card .article-title {
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.article-card .article-description {
+    color: var(--text-color);
+    opacity: 0.9;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.article-meta {
+    margin-top: auto;
+    font-size: 0.85rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    word-wrap: break-word;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.article-meta p {
+    margin: 5px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.article-tags-small {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    gap: 5px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.author-button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 5px;
+}
+
+.author-button:hover {
+    color: var(--primary-light);
+    transform: translateY(-2px);
+    background: none;
+}
+
+.article-tags-small .tag-button {
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    transition: var(--transition);
+}
+
+.article-tags-small .tag-button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 30px 0;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pagination-button {
+    padding: 8px 12px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--primary-light);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.pagination-button:hover:not(:disabled) {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.pagination-button.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+    padding: 8px 12px;
+    color: var(--text-color);
+}
+
+.new-button {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.new-article-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+    border: none;
+}
+
+.new-article-button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .article-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .article-title-main {
+        font-size: 2rem;
+    }
+
+    .article-meta {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination {
+        gap: 5px;
+    }
+
+    .pagination-button {
+        padding: 6px 10px;
+        font-size: 0.9rem;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading skeleton styles */
+.loading-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+    height: 100%;
+    cursor: default;
+}
+
+.article-image-placeholder {
+    background-color: rgba(255, 255, 255, 0.1);
+    width: 100%;
+    height: 180px;
+}
+
+.skeleton-line {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    height: 16px;
+    margin-bottom: 12px;
+    width: 100%;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-line.title-line {
+    height: 24px;
+    width: 90%;
+    margin-bottom: 20px;
+}
+
+.skeleton-grid {
+    opacity: 0.7;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.user-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.back-button {
+    background-color: var(--primary-color);
+    border: none;
+    color: var(--text-color);
+    padding: 10px 20px;
+    font: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.back-button:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+

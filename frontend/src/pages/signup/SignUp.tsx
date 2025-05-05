@@ -4,11 +4,14 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignUp.css';
 import '../../App.css';
+import {API_URL} from "../../api/config.ts";
 
 const SignUp: React.FC = () => {
     const [formData, setFormData] = useState({
         username: '',
         correo: '',
+        nombre: '',
+        telefono: '',
         password: '',
         confirmPassword: ''
     });
@@ -31,35 +34,86 @@ const SignUp: React.FC = () => {
         }
     }, [navigate]);
 
+    const validateForm = () => {
+        // Username validation (6-20 characters)
+        if (!formData.username || formData.username.length < 6 || formData.username.length > 20) {
+            setError('Username must be between 6 and 20 characters');
+            return false;
+        }
+
+        // Email validation (11-40 characters)
+        if (!formData.correo || formData.correo.length < 11 || formData.correo.length > 40) {
+            setError('Email must be between 11 and 40 characters');
+            return false;
+        }
+
+        // Full name validation (12-50 characters)
+        if (!formData.nombre || formData.nombre.length < 12 || formData.nombre.length > 50) {
+            setError('Full name must be between 12 and 50 characters');
+            return false;
+        }
+
+        // Phone validation (10-15 characters)
+        if (!formData.telefono || formData.telefono.length < 10 || formData.telefono.length > 15) {
+            setError('Phone number must be between 10 and 15 characters');
+            return false;
+        }
+
+        // Password validation (8-32 characters)
+        if (!formData.password || formData.password.length < 8 || formData.password.length > 32) {
+            setError('Password must be between 8 and 32 characters');
+            return false;
+        }
+
+        // Password confirmation
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match');
+            return false;
+        }
+
+        return true;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
 
-        // Basic validation
-        if (!formData.username || !formData.correo || !formData.password) {
-            setError('Please fill in all required fields');
-            return;
-        }
-
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
+        // Validate all fields
+        if (!validateForm()) {
             return;
         }
 
         try {
             setLoading(true);
-            const response = await axios.post('/api/auth/signup/', {
+            const signupResponse = await axios.post(`${API_URL}/api/auth/signup/`, {
                 username: formData.username,
                 correo: formData.correo,
+                nombre: formData.nombre,
+                telefono: formData.telefono,
                 password: formData.password
             });
 
-            setLoading(false);
+            if (signupResponse.status === 201) {
+                // Registration successful, now auto-login
+                const loginResponse = await axios.post(`${API_URL}/api/auth/login/`, {
+                    username: formData.username,
+                    password: formData.password
+                });
 
-            if (response.status === 201) {
-                // Registration successful
-                navigate('/login', { state: { message: 'Registration successful! Please login.' } });
+                if (loginResponse.data && loginResponse.data.token) {
+                    // Store token and user info
+                    localStorage.setItem('token', loginResponse.data.token);
+                    localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+
+                    // Redirect to articles page
+                    navigate('/articles');
+                } else {
+                    // If auto-login fails, redirect to login
+                    navigate('/login', { state: { message: 'Registration successful! Please login.' } });
+                }
             }
+
+            setLoading(false);
         } catch (error: any) {
             setLoading(false);
             if (error.response && error.response.data && error.response.data.error) {
@@ -85,7 +139,7 @@ const SignUp: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label htmlFor="username" className="block text-gray-700 text-sm font-bold mb-2">
-                            Username
+                            Username (6-20 characters)
                         </label>
                         <input
                             type="text"
@@ -94,13 +148,32 @@ const SignUp: React.FC = () => {
                             value={formData.username}
                             onChange={handleChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            minLength={6}
+                            maxLength={20}
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="nombre" className="block text-gray-700 text-sm font-bold mb-2">
+                            Full Name (12-50 characters)
+                        </label>
+                        <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            value={formData.nombre}
+                            onChange={handleChange}
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            minLength={12}
+                            maxLength={50}
                             required
                         />
                     </div>
 
                     <div>
                         <label htmlFor="correo" className="block text-gray-700 text-sm font-bold mb-2">
-                            Email
+                            Email (11-40 characters)
                         </label>
                         <input
                             type="email"
@@ -109,13 +182,32 @@ const SignUp: React.FC = () => {
                             value={formData.correo}
                             onChange={handleChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            minLength={11}
+                            maxLength={40}
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="telefono" className="block text-gray-700 text-sm font-bold mb-2">
+                            Phone Number (10-15 characters)
+                        </label>
+                        <input
+                            type="text"
+                            id="telefono"
+                            name="telefono"
+                            value={formData.telefono}
+                            onChange={handleChange}
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            minLength={10}
+                            maxLength={15}
                             required
                         />
                     </div>
 
                     <div>
                         <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
-                            Password
+                            Password (8-32 characters)
                         </label>
                         <input
                             type="password"
@@ -124,6 +216,8 @@ const SignUp: React.FC = () => {
                             value={formData.password}
                             onChange={handleChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            minLength={8}
+                            maxLength={32}
                             required
                         />
                     </div>

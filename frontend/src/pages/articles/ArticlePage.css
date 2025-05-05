@@ -175,6 +175,26 @@ button:disabled {
     background-color: #5a6268;
 }
 
+.article-meta {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    color: var(--text-color);
+}
+
+.article-meta p {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+/* Make sure nested elements in article-page have consistent width */
+.article-page .article-meta,
+.article-page .article-content,
+.article-page .article-tags {
+    max-width: 800px;
+    width: 100%;
+}
+
 .delete-confirm-button {
     background-color: #6c757d;
     cursor: not-allowed;

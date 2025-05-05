@@ -20,11 +20,55 @@ def get_all_articles(request):
         # Calculate skip value
         skip = (page - 1) * per_page
 
-        # Count total articles for pagination metadata
+        # Get the total count of articles for pagination FIRST
         total_articles = db.articles.count_documents({})
 
         # Get articles sorted by date (newest first) with pagination
         articles = list(db.articles.find().sort('fecha_creacion', -1).skip(skip).limit(per_page))
+
+        if not articles:
+            return JsonResponse({
+                "articles": [],
+                "pagination": {
+                    "total": total_articles,
+                    "page": page,
+                    "per_page": per_page,
+                    "pages": (total_articles + per_page - 1) // per_page
+                }
+            }, safe=False)
+
+        # Fix the import at the top of file to resolve the serialize_article_full reference
+        enriched = [serialize_article_full(article, db.users, db.tags) for article in articles]
+
+        return Response({
+            "articles": enriched,
+            "pagination": {
+                "total": total_articles,
+                "page": page,
+                "per_page": per_page,
+                "pages": (total_articles + per_page - 1) // per_page
+            }
+        })
+    except Exception as e:
+        print(f"[ERROR] Exception in get_all_articles: {e}")
+        return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def get_all_articles_by_author(request, author_id):
+    try:
+        # Get page number from query params, default to 1
+        page = int(request.query_params.get('page', 1))
+        # Get items per page from query params, default to 9
+        per_page = int(request.query_params.get('per_page', 9))
+
+        # Calculate skip value
+        skip = (page - 1) * per_page
+
+        # Get articles sorted by date (newest first) with pagination
+        articles = list(db.articles.find({'autor_id': author_id}).sort('fecha_creacion', -1).skip(skip).limit(per_page))
+
+        # Count total articles for pagination metadata
+        total_articles = len(articles)
 
         if not articles:
             return JsonResponse({

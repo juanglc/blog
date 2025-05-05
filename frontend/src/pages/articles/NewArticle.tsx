@@ -5,7 +5,6 @@ import axios from 'axios';
 import ImageUploader from '../../components/ImageUploader.tsx';
 import './NewArticle.css';
 import {API_URL} from "../../api/config.ts";
-import UserProfileBadge from "../../components/userInfo/UserProfileBadge.tsx";
 import '../../App.css';
 import { Spinner } from '../../components/Spinner.tsx';
 import { CustomAlert } from '../../components/alerts/Alerts.tsx';
@@ -458,9 +457,6 @@ export default function NewArticle() {
     if (formSubmitted) {
         return (
             <div className="article-page">
-                <div className={"user-wrapper"}>
-                    <UserProfileBadge />
-                </div>
                 <h1>Article Submitted</h1>
                 <div className="submission-success">
                     <CustomAlert
@@ -482,9 +478,6 @@ export default function NewArticle() {
 
     if (isLoading) {
         return <div className="article-page">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge />
-            </div>
             <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
                 <Spinner size="medium" color="var(--primary-color)" />
             </div>
@@ -502,9 +495,6 @@ export default function NewArticle() {
 
     return (
         <div className="article-page">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge />
-            </div>
             <h1>Create New Article</h1>
 
             {showAlert && (

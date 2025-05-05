@@ -9,7 +9,7 @@
 }
 
 .login-form-wrapper {
-    background-color: var(--card-bg);
+    background-color: var(--secondary-color);
     border-radius: var(--border-radius);
     padding: 30px;
     width: 100%;
@@ -161,7 +161,7 @@
 
 .additional-options a:hover {
     text-decoration: underline;
-    color: var(--primary-dark);
+    color: var(--primary-light);
 }
 
 input::placeholder {

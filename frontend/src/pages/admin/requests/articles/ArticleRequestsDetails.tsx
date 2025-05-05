@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../../../api/config.ts';
 import './ArticleRequestsDetails.css';
-import UserProfileBadge from '../../../../components/userInfo/UserProfileBadge.tsx';
 import { Spinner } from '../../../../components/Spinner.tsx';
 import '../../../../App.css';
 
@@ -208,9 +207,6 @@ const ArticleRequestDetails = () => {
 
     return (
         <div className="article-request-details">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge/>
-            </div>
             <h1>Request Details</h1>
             <div className="request-details">
                 {Object.entries(request).map(([key, value]) => {
@@ -230,7 +226,9 @@ const ArticleRequestDetails = () => {
             {request?.id_articulo_nuevo && (request?.estado === 'pendiente' || request?.estado === 'denegado') && (
                 <button
                     className="view-pending-article-button"
-                    onClick={() => navigate(`/admin/pending-article/${request.id_articulo_nuevo}`)}
+                    onClick={() => navigate(`/pending-article/${request.id_articulo_nuevo}`, {
+                        state: { validAccess: true }
+                    })}
                 >
                     View Pending Article
                 </button>

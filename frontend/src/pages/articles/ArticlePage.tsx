@@ -4,7 +4,6 @@ import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import './ArticlePage.css';
 import { API_URL } from "../../api/config.ts";
-import UserProfileBadge from "../../components/userInfo/UserProfileBadge";
 import { Spinner } from '../../components/Spinner.tsx';
 import { CustomAlert } from "../../components/alerts/Alerts.tsx";
 import '../../App.css';
@@ -47,8 +46,8 @@ export default function ArticlePage() {
     const userRole = user.rol;
     const userId = user._id;
 
-    // Check if the page was accessed from admin
-    const isFromAdmin = location.state?.fromAdmin || false;
+    // State for permission to render action buttons
+    const [canEditArticle, setCanEditArticle] = useState(false);
 
     useEffect(() => {
         if (!id) {
@@ -60,7 +59,22 @@ export default function ArticlePage() {
         const fetchArticle = async () => {
             try {
                 const response = await axios.get(`${API_URL}/api/articles/${id}`);
-                setArticle(response.data);
+                const fetchedArticle = response.data;
+
+                // Check permissions after article data is loaded
+                const hasPermission =
+                    (userRole === 'admin' && userId === fetchedArticle.autor_id) ||
+                    (userRole === 'escritor' && userId === fetchedArticle.autor_id);
+
+                console.log("Permission check:", {
+                    userRole,
+                    userId,
+                    authorId: fetchedArticle.autor_id,
+                    hasPermission
+                });
+
+                setCanEditArticle(hasPermission);
+                setArticle(fetchedArticle);
             } catch (err) {
                 console.error('Error fetching article:', err);
                 setError('Failed to load article');
@@ -70,7 +84,7 @@ export default function ArticlePage() {
         };
 
         fetchArticle();
-    }, [id]);
+    }, [id, userRole, userId]);
 
     useEffect(() => {
         if (location.state?.message) {
@@ -127,7 +141,7 @@ export default function ArticlePage() {
     };
 
     const handleTagClick = (tagId: string) => {
-        navigate(`/articles/tag/${tagId}`);
+        navigate(`/tags?tagId=${tagId}`);
     };
 
     const handleAuthorClick = () => {
@@ -137,9 +151,6 @@ export default function ArticlePage() {
     if (loading) {
         return (
             <div className="article-page">
-                <div className="user-wrapper">
-                    <UserProfileBadge />
-                </div>
                 <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
                     <Spinner size="medium" color="var(--primary-color)" />
                 </div>
@@ -178,9 +189,6 @@ export default function ArticlePage() {
     if (error) {
         return (
             <div className="article-page">
-                <div className={"user-wrapper"}>
-                    <UserProfileBadge />
-                </div>
                 <div className="error-container">
                     <p>{error}</p>
                     <button className="back-button" onClick={() => navigate(-1)}>Go Back</button>
@@ -192,9 +200,6 @@ export default function ArticlePage() {
     if (!article) {
         return (
             <div className="article-page">
-                <div className={"user-wrapper"}>
-                    <UserProfileBadge />
-                </div>
                 <div className="error-container">
                     <p>Article not found.</p>
                     <button className="back-button" onClick={() => navigate(-1)}>Go Back</button>
@@ -205,10 +210,6 @@ export default function ArticlePage() {
 
     return (
         <div className="article-page">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge />
-            </div>
-
             {alert && (
                 <div className="mt-2 mb-4 w-full">
                     <CustomAlert
@@ -267,14 +268,14 @@ export default function ArticlePage() {
                 </div>
             </div>
 
-            {/* Conditionally render buttons for admin or escritor */}
-            {!isFromAdmin && (userRole === 'admin' || userRole === 'escritor' && userId === article.autor_id) && (
-
+            {/* Conditionally render buttons based on permission state */}
+            {canEditArticle && (
                 <div className="article-actions">
-
                     <hr/>
                     <button
-                        onClick={() => navigate(`/articles/update/${id}`)}
+                        onClick={() => navigate(`/articles/update/${id}`, {
+                            state: { validAccess: true }
+                        })}
                         className="update-button">
                         Update Article
                     </button>

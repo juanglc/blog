@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../api/config.ts';
 import { CustomAlert } from '../../components/alerts/Alerts.tsx';
-import UserProfileBadge from '../../components/userInfo/UserProfileBadge.tsx';
 import { Spinner } from '../../components/Spinner.tsx';
 import './Details.css';
 import '../../App.css';
@@ -102,9 +101,6 @@ const RequestDetails = () => {
     if (loading) {
         return (
             <div className="request-details-page">
-                <div className={"user-wrapper"}>
-                    <UserProfileBadge />
-                </div>
                 <div className="spinner-wrapper">
                     <Spinner size="large" color="var(--primary-color)" />
                 </div>
@@ -115,9 +111,6 @@ const RequestDetails = () => {
     if (error) {
         return (
             <div className="request-details-page">
-                <div className={"user-wrapper"}>
-                    <UserProfileBadge />
-                </div>
                 <h1>Request Details</h1>
                 <div className="error-container">
                     <p>{error}</p>
@@ -131,9 +124,6 @@ const RequestDetails = () => {
 
     return (
         <div className="request-details-page">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge />
-            </div>
             {alert && (
                 <CustomAlert
                     type={alert.type}

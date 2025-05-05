@@ -1,9 +1,7 @@
-// frontend/src/pages/articles/DraftsList.tsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from "../../api/config.ts";
-import UserProfileBadge from "../../components/userInfo/UserProfileBadge.tsx";
 import { Spinner } from '../../components/Spinner.tsx';
 import { CustomAlert } from '../../components/alerts/Alerts.tsx';
 import './DraftsList.css';
@@ -18,16 +16,33 @@ type Draft = {
     id_articulo_original?: string;
 };
 
+interface PaginationData {
+    total: number;
+    page: number;
+    per_page: number;
+    pages: number;
+}
+
 export default function DraftsList() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [drafts, setDrafts] = useState<Draft[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
+    const [pagination, setPagination] = useState<PaginationData>({
+        total: 0,
+        page: 1,
+        per_page: 9,
+        pages: 0
+    });
     const navigate = useNavigate();
 
     // Get user from local storage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = user._id;
+
+    // Get current page from URL params or default to 1
+    const currentPage = parseInt(searchParams.get('page') || '1');
 
     useEffect(() => {
         if (!userId) {
@@ -37,13 +52,14 @@ export default function DraftsList() {
         }
 
         fetchDrafts();
-    }, [userId]);
+    }, [userId, currentPage]);
 
     const fetchDrafts = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`${API_URL}/api/drafts/all/${userId}/`);
-            setDrafts(response.data.drawers || []);
+            const response = await axios.get(`${API_URL}/api/drafts/all/${userId}/?page=${currentPage}&per_page=9`);
+            setDrafts(response.data.drafts || []);
+            setPagination(response.data.pagination);
         } catch (err: any) {
             console.error('Error fetching drafts:', err);
             setError(err.message || 'Failed to fetch drafts');
@@ -81,22 +97,57 @@ export default function DraftsList() {
     const handleEditDraft = (draft: Draft) => {
         if (draft.tipo === 'nuevo') {
             // For new article drafts, navigate to new article page with draft ID
-            navigate(`/articles/new?draft=${draft._id}`);
+            navigate(`/articles/new?draft=${draft._id}`, {
+                state: { validAccess: true }
+            });
         } else if (draft.tipo === 'update' && draft.id_articulo_original) {
             // For update drafts, navigate to update article page with original article ID
-            navigate(`/articles/update/${draft.id_articulo_original}`);
+            navigate(`/articles/update/${draft.id_articulo_original}`, {
+                state: { validAccess: true }
+            });
         } else {
             // Fallback in case of unexpected draft type
-            navigate(`/drafts/edit/${draft._id}`);
+            navigate(`/drafts/edit/${draft._id}`, {
+                state: { validAccess: true }
+            });
         }
+    };
+
+    const handlePageChange = (page: number) => {
+        setSearchParams({ page: page.toString() });
+    };
+
+    const getPageNumbers = () => {
+        const pageNumbers = [];
+        const { page, pages } = pagination;
+
+        pageNumbers.push(1);
+
+        let startPage = Math.max(2, page - 1);
+        let endPage = Math.min(pages - 1, page + 1);
+
+        if (startPage > 2) {
+            pageNumbers.push('...');
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbers.push(i);
+        }
+
+        if (endPage < pages - 1) {
+            pageNumbers.push('...');
+        }
+
+        if (pages > 1) {
+            pageNumbers.push(pages);
+        }
+
+        return pageNumbers;
     };
 
     if (loading) {
         return (
             <div className="drafts-page">
-                <div className="user-wrapper">
-                    <UserProfileBadge />
-                </div>
                 <h1>My Drafts</h1>
                 <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
                     <Spinner size="medium" color="var(--primary-color)" />
@@ -108,9 +159,6 @@ export default function DraftsList() {
     if (error) {
         return (
             <div className="drafts-page">
-                <div className="user-wrapper">
-                    <UserProfileBadge />
-                </div>
                 <h1>My Drafts</h1>
                 <CustomAlert
                     type="error"
@@ -130,9 +178,6 @@ export default function DraftsList() {
 
     return (
         <div className="drafts-page">
-            <div className="user-wrapper">
-                <UserProfileBadge />
-            </div>
             <h1>My Drafts</h1>
 
             {alert && (
@@ -146,7 +191,9 @@ export default function DraftsList() {
 
             <div className="drafts-actions">
                 <button
-                    onClick={() => navigate('/articles/new')}
+                    onClick={() => navigate('/articles/new', {
+                        state: { validAccess: true }
+                    })}
                     className="primary-button"
                 >
                     Create New Article
@@ -164,8 +211,8 @@ export default function DraftsList() {
                             <div className="draft-header">
                                 <h3>{draft.titulo || 'Untitled Draft'}</h3>
                                 <span className={`draft-type ${draft.tipo === 'nuevo' ? 'new' : 'update'}`}>
-                  {draft.tipo === 'nuevo' ? 'New Article' : 'Update'}
-                </span>
+                                    {draft.tipo === 'nuevo' ? 'New Article' : 'Update'}
+                                </span>
                             </div>
                             <p className="draft-description">{draft.descripcion || 'No description'}</p>
                             <div className="draft-meta">
@@ -187,12 +234,46 @@ export default function DraftsList() {
                 </div>
             )}
 
+            {pagination.pages > 1 && (
+                <div className="pagination">
+                    <button
+                        onClick={() => handlePageChange(pagination.page - 1)}
+                        disabled={pagination.page === 1}
+                        className="pagination-button"
+                    >
+                        &laquo; Previous
+                    </button>
+
+                    {getPageNumbers().map((pageNum, index) => (
+                        pageNum === '...' ? (
+                            <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                        ) : (
+                            <button
+                                key={`page-${pageNum}`}
+                                onClick={() => handlePageChange(Number(pageNum))}
+                                className={`pagination-button ${pagination.page === pageNum ? 'active' : ''}`}
+                            >
+                                {pageNum}
+                            </button>
+                        )
+                    ))}
+
+                    <button
+                        onClick={() => handlePageChange(pagination.page + 1)}
+                        disabled={pagination.page === pagination.pages}
+                        className="pagination-button"
+                    >
+                        Next &raquo;
+                    </button>
+                </div>
+            )}
+
             <button
-                onClick={() => navigate('/articles')}
+                onClick={() => navigate(-1)}
                 className="secondary-button"
                 style={{ marginTop: '20px' }}
             >
-                Back to Articles
+                Back
             </button>
         </div>
     );

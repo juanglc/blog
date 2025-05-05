@@ -4,7 +4,6 @@ import ReactMarkdown from 'react-markdown';
 import ImageUploader from '../../components/ImageUploader.tsx';
 import './NewArticle.css';
 import { API_URL } from "../../api/config.ts";
-import UserProfileBadge from "../../components/userInfo/UserProfileBadge.tsx";
 import '../../App.css';
 import { Spinner } from "../../components/Spinner.tsx";
 import { CustomAlert } from "../../components/alerts/Alerts.tsx";
@@ -599,9 +598,6 @@ export default function UpdateArticle() {
     if (hasPendingUpdate) {
         return (
             <div className="article-page">
-                <div className={"user-wrapper"}>
-                    <UserProfileBadge />
-                </div>
                 <h1>Update Not Allowed</h1>
                 <div className="pending-update-warning">
                     <CustomAlert
@@ -626,9 +622,6 @@ export default function UpdateArticle() {
     if (formSubmitted) {
         return (
             <div className="article-page">
-                <div className={"user-wrapper"}>
-                    <UserProfileBadge />
-                </div>
                 <h1>Update Request Submitted</h1>
                 <div className="submission-success">
                     <CustomAlert
@@ -650,9 +643,6 @@ export default function UpdateArticle() {
 
     if (loading) {
         return <div className="article-page">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge />
-            </div>
             <div className="spinner-wrapper" style={{ margin: "30px auto" }}>
                 <Spinner size="large" color="var(--primary-color)" />
             </div>
@@ -680,9 +670,6 @@ export default function UpdateArticle() {
 
     return (
         <div className="article-page">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge />
-            </div>
             <h1>Update Article</h1>
 
             {alert && (

@@ -71,11 +71,7 @@ const LoginPage = () => {
             localStorage.setItem('user', JSON.stringify(response.data.user));
 
             // Check if the user is an admin and redirect accordingly
-            if (response.data.user.rol === 'admin') {
-                navigate('/admin');
-            } else {
-                navigate('/articles');
-            }
+            navigate('/articles');
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
                 setError(error.response.data.error || 'Login failed. Please check your credentials.');

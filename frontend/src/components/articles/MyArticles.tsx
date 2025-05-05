@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import './ArticleCards.css';
-import '../../pages/articles/ArticlePage.css';
 import { API_URL } from "../../api/config.ts";
 import { CustomAlert } from "../../components/alerts/Alerts.tsx";
-import '../../App.css';
 import { Spinner } from '../Spinner.tsx';
+import './MyArticles.css'
+import '../../App.css';
 
 type Article = {
     imagen_url: string;
@@ -30,13 +29,11 @@ type PaginationData = {
     pages: number;
 };
 
-export default function ArticleCards() {
-    const { authorId } = useParams<{ authorId?: string }>();
+export default function MyArticles() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [authorName, setAuthorName] = useState<string>('');
     const [pagination, setPagination] = useState<PaginationData>({
         total: 0,
         page: 1,
@@ -44,45 +41,38 @@ export default function ArticleCards() {
         pages: 0
     });
     const navigate = useNavigate();
-
-    // Get user role from localStorage
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userRole = user.rol;
-
-    const isAuthorView = !!authorId;
-    const currentPage = parseInt(searchParams.get('page') || '1');
-
     const location = useLocation();
     const [alert, setAlert] = useState<{ message: string, type: string } | null>(null);
+
+    // Get user data from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user._id;
+    const userRole = user.rol;
+
+    const currentPage = parseInt(searchParams.get('page') || '1');
 
     useEffect(() => {
         setLoading(true);
 
-        let apiUrl = `${API_URL}/api/articles/`;
-
-        if (isAuthorView) {
-            apiUrl = `${API_URL}/api/articles/author/${authorId}/`;
+        if (!userId) {
+            setError('Usuario no autenticado');
+            setLoading(false);
+            return;
         }
 
-        // Agrega parámetros de paginación
-        apiUrl += `?page=${currentPage}&per_page=9`;
-
-        axios.get(apiUrl)
+        // Add pagination parameters to the API request
+        axios.get(`${API_URL}/api/articles/author/${userId}?page=${currentPage}&per_page=9`)
             .then(res => {
                 setArticles(res.data.articles);
                 setPagination(res.data.pagination);
-
-                if (isAuthorView && res.data.articles.length > 0) {
-                    setAuthorName(res.data.articles[0].autor || 'Desconocido');
-                }
-
                 setLoading(false);
             })
-            .catch(() => {
-                setError('Failed to load articles');
+            .catch((err) => {
+                console.error('Error fetching articles:', err);
+                setError('Error al cargar tus artículos');
                 setLoading(false);
             });
-    }, [authorId, isAuthorView, currentPage]);
+    }, [userId, currentPage]);
 
     useEffect(() => {
         if (location.state?.message) {
@@ -96,14 +86,13 @@ export default function ArticleCards() {
         }
     }, [location.state, location.pathname, navigate]);
 
-
     const handleCardClick = (id: string) => {
         navigate(`/articles/${id}`);
     };
 
     const handleTagClick = (e: React.MouseEvent, tagId: string) => {
         e.stopPropagation(); // Prevent card click event
-        navigate(`/tags?tagId=${tagId}`); // Redirect to Tags page with the tagId as a parameter
+        navigate(`/articles/tag/${tagId}`);
     };
 
     const handleAuthorClick = (e: React.MouseEvent, author: string, authorId: string) => {
@@ -145,7 +134,7 @@ export default function ArticleCards() {
 
     if (loading) {
         return <div className="article-section">
-            <h2 className="article-title-main">Artículos</h2>
+            <h2 className="article-title-main">Mis Artículos</h2>
             <div className="spinner-wrapper" style={{ marginBottom: "20px" }}>
                 <Spinner size="medium" color="var(--primary-color)" />
             </div>
@@ -168,19 +157,13 @@ export default function ArticleCards() {
         return (
             <div className="error-container">
                 <p>{error}</p>
-                <button className="back-button" onClick={() => navigate(-1)}>Go Back</button>
+                <button className="back-button" onClick={() => navigate(-1)}>Volver</button>
             </div>
         );
     }
 
-    let pageTitle = "Artículos Recientes";
-    if (isAuthorView) {
-        pageTitle = `Artículos de: ${authorName || 'Cargando...'}`;
-    }
-
     return (
         <div className="article-section">
-
             {alert && (
                 <div className="mt-2 mb-4 w-full">
                     <CustomAlert
@@ -192,10 +175,22 @@ export default function ArticleCards() {
                 </div>
             )}
 
-            <h2 className="article-title-main">{pageTitle}</h2>
+            <h2 className="article-title-main">Mis Artículos</h2>
 
             {articles.length === 0 ? (
-                <p>No se encontraron artículos.</p>
+                <div className="no-articles">
+                    <p>No has publicado ningún artículo todavía.</p>
+                    {(userRole === 'admin' || userRole === 'escritor') && (
+                        <button
+                            onClick={() => navigate('/articles/new', {
+                                state: { validAccess: true }
+                            })}
+                            className="new-article-button"
+                        >
+                            Crear mi primer artículo
+                        </button>
+                    )}
+                </div>
             ) : (
                 <div className="article-grid">
                     {articles.map((article, index) => (
@@ -251,7 +246,7 @@ export default function ArticleCards() {
                         disabled={pagination.page === 1}
                         className="pagination-button"
                     >
-                        &laquo; Anterior
+                        &laquo; Previous
                     </button>
 
                     {getPageNumbers().map((pageNum, index) => (
@@ -273,46 +268,28 @@ export default function ArticleCards() {
                         disabled={pagination.page === pagination.pages}
                         className="pagination-button"
                     >
-                        Siguiente &raquo;
+                        Next &raquo;
                     </button>
                 </div>
             )}
 
-            {isAuthorView ? (
-                <>
-                    <div>
-                        <button
-                            onClick={() => navigate('/articles')}
-                            className="new-article-button"
-                            style={{ marginTop: '20px' }}
-                        >
-                            Volver a Artículos
-                        </button>
-                    </div>
-                    <hr />
-                    <div>
-                        <button onClick={() => navigate(-1)} className="back-button">
-                            Volver
-                        </button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <hr />
-                    <div className="new-button">
-                        {(userRole === 'admin' || userRole === 'escritor') && (
-                            <button
-                                onClick={() => navigate('/articles/new', {
-                                    state: { validAccess: true }
-                                })}
-                                className="new-article-button"
-                            >
-                                Nuevo Artículo
-                            </button>
-                        )}
-                    </div>
-                </>
-            )}
+            <hr />
+            <div className="action-buttons">
+                <button onClick={() => navigate(-1)} className="back-button">
+                    Volver
+                </button>
+
+                {(userRole === 'admin' || userRole === 'escritor') && (
+                    <button
+                        onClick={() => navigate('/articles/new', {
+                            state: { validAccess: true }
+                        })}
+                        className="new-article-button"
+                    >
+                        New Article
+                    </button>
+                )}
+            </div>
         </div>
     );
 }

@@ -39,7 +39,7 @@ def get_all_drafts(request, autor_id):
             enriched.append(serialized)
 
         return Response({
-            "drawers": enriched,
+            "drafts": enriched,
             "pagination": {
                 "total": total_drafts,
                 "page": page,

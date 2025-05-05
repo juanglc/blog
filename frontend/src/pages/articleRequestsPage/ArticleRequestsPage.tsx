@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../api/config.ts';
 import '../../App.css';
 import './ArticleRequestsPage.css';
-import UserProfileBadge from '../../components/userInfo/UserProfileBadge';
 import { Spinner } from '../../components/Spinner.tsx';
 import { CustomAlert } from '../../components/alerts/Alerts.tsx';
 
@@ -25,17 +24,34 @@ interface ArticleRequest {
     };
 }
 
+interface PaginationData {
+    total: number;
+    page: number;
+    per_page: number;
+    pages: number;
+}
+
 const ArticleRequestsPage = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [requests, setRequests] = useState<ArticleRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<'active' | 'rejected' | 'approved'>('active');
     const [alert, setAlert] = useState<{ message: string, type: "success" | "error" | "info" | "warning" } | null>(null);
+    const [pagination, setPagination] = useState<PaginationData>({
+        total: 0,
+        page: 1,
+        per_page: 9,
+        pages: 0
+    });
     const navigate = useNavigate();
 
     // Get userId from localStorage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = user._id;
+
+    // Get current page from URL params or default to 1
+    const currentPage = parseInt(searchParams.get('page') || '1');
 
     useEffect(() => {
         if (!userId) {
@@ -45,7 +61,7 @@ const ArticleRequestsPage = () => {
         }
 
         fetchRequests();
-    }, [filter, userId, navigate]);
+    }, [filter, userId, navigate, currentPage]);
 
     const fetchRequests = async () => {
         try {
@@ -55,11 +71,11 @@ const ArticleRequestsPage = () => {
             // Build endpoint based on filter and include userId
             let endpoint;
             if (filter === 'active') {
-                endpoint = `${API_URL}/api/requests/articles/active/${userId}/`;
+                endpoint = `${API_URL}/api/requests/articles/active/${userId}/?page=${currentPage}&per_page=9`;
             } else if (filter === 'rejected') {
-                endpoint = `${API_URL}/api/requests/articles/rejected/${userId}/`;
+                endpoint = `${API_URL}/api/requests/articles/rejected/${userId}/?page=${currentPage}&per_page=9`;
             } else { // approved
-                endpoint = `${API_URL}/api/requests/articles/approved/${userId}/`;
+                endpoint = `${API_URL}/api/requests/articles/approved/${userId}/?page=${currentPage}&per_page=9`;
             }
 
             const response = await axios.get(endpoint, {
@@ -67,6 +83,7 @@ const ArticleRequestsPage = () => {
             });
 
             setRequests(response.data.requests || []);
+            setPagination(response.data.pagination);
             setLoading(false);
         } catch (err) {
             console.error("Error fetching article requests:", err);
@@ -95,12 +112,47 @@ const ArticleRequestsPage = () => {
         }
     };
 
+    const handlePageChange = (page: number) => {
+        setSearchParams({ page: page.toString() });
+    };
+
+    const getPageNumbers = () => {
+        const pageNumbers = [];
+        const { page, pages } = pagination;
+
+        pageNumbers.push(1);
+
+        let startPage = Math.max(2, page - 1);
+        let endPage = Math.min(pages - 1, page + 1);
+
+        if (startPage > 2) {
+            pageNumbers.push('...');
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbers.push(i);
+        }
+
+        if (endPage < pages - 1) {
+            pageNumbers.push('...');
+        }
+
+        if (pages > 1) {
+            pageNumbers.push(pages);
+        }
+
+        return pageNumbers;
+    };
+
+    // When filter changes, reset to page 1
+    const handleFilterChange = (newFilter: 'active' | 'rejected' | 'approved') => {
+        setFilter(newFilter);
+        setSearchParams({ page: '1' });
+    };
+
     if (loading) {
         return (
             <div className="requests-page">
-                <div className={"user-wrapper"}>
-                    <UserProfileBadge />
-                </div>
                 <h1>My Article Requests</h1>
                 <div className="spinner-wrapper">
                     <Spinner size="medium" color="var(--primary-color)" />
@@ -112,9 +164,6 @@ const ArticleRequestsPage = () => {
     if (error) {
         return (
             <div className="requests-page">
-                <div className={"user-wrapper"}>
-                    <UserProfileBadge />
-                </div>
                 <h1>My Article Requests</h1>
                 <div className="error-container">
                     <p>{error}</p>
@@ -126,9 +175,6 @@ const ArticleRequestsPage = () => {
 
     return (
         <div className="requests-page">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge />
-            </div>
             <h1>My Article Requests</h1>
 
             {alert && (
@@ -143,19 +189,19 @@ const ArticleRequestsPage = () => {
             <div className="filter-buttons">
                 <button
                     className={filter === 'active' ? 'filter-button active' : 'filter-button'}
-                    onClick={() => setFilter('active')}
+                    onClick={() => handleFilterChange('active')}
                 >
                     Pending
                 </button>
                 <button
                     className={filter === 'approved' ? 'filter-button active' : 'filter-button'}
-                    onClick={() => setFilter('approved')}
+                    onClick={() => handleFilterChange('approved')}
                 >
                     Approved
                 </button>
                 <button
                     className={filter === 'rejected' ? 'filter-button active' : 'filter-button'}
-                    onClick={() => setFilter('rejected')}
+                    onClick={() => handleFilterChange('rejected')}
                 >
                     Rejected
                 </button>
@@ -211,17 +257,51 @@ const ArticleRequestsPage = () => {
                                     </td>
                                 )}
                                 <td>
-            <span className={`status-badge ${request.estado}`}>
-                {request.estado === 'pendiente' ? 'pending' :
-                    request.estado === 'aprobado' ? 'approved' :
-                        request.estado === 'denegado' ? 'rejected' : request.estado}
-            </span>
+                                    <span className={`status-badge ${request.estado}`}>
+                                        {request.estado === 'pendiente' ? 'pending' :
+                                            request.estado === 'aprobado' ? 'approved' :
+                                                request.estado === 'denegado' ? 'rejected' : request.estado}
+                                    </span>
                                 </td>
                                 <td>{formatDate(request.fecha)}</td>
                             </tr>
                         ))}
                         </tbody>
                     </table>
+                </div>
+            )}
+
+            {pagination.pages > 1 && (
+                <div className="pagination">
+                    <button
+                        onClick={() => handlePageChange(pagination.page - 1)}
+                        disabled={pagination.page === 1}
+                        className="pagination-button"
+                    >
+                        &laquo; Previous
+                    </button>
+
+                    {getPageNumbers().map((pageNum, index) => (
+                        pageNum === '...' ? (
+                            <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                        ) : (
+                            <button
+                                key={`page-${pageNum}`}
+                                onClick={() => handlePageChange(Number(pageNum))}
+                                className={`pagination-button ${pagination.page === pageNum ? 'active' : ''}`}
+                            >
+                                {pageNum}
+                            </button>
+                        )
+                    ))}
+
+                    <button
+                        onClick={() => handlePageChange(pagination.page + 1)}
+                        disabled={pagination.page === pagination.pages}
+                        className="pagination-button"
+                    >
+                        Next &raquo;
+                    </button>
                 </div>
             )}
 

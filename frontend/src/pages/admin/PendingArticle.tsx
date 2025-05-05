@@ -5,7 +5,6 @@ import axios from 'axios';
 import './PendingArticle.css';
 import { API_URL } from '../../api/config';
 import '../../App.css';
-import UserProfileBadge from '../../components/userInfo/UserProfileBadge';
 import { Spinner } from '../../components/Spinner';
 
 type PendingArticle = {
@@ -58,9 +57,6 @@ export default function PendingArticle() {
 
     if (loading) {
         return <div className="article-page">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge />
-            </div>
             <div className="spinner-wrapper" style={{ margin: "20px auto" }}>
                 <Spinner size="medium" color="var(--primary-color)" />
             </div>
@@ -90,9 +86,6 @@ export default function PendingArticle() {
 
     return (
         <div className="pending-article-page">
-            <div className={"user-wrapper"}>
-                <UserProfileBadge />
-            </div>
             <h1>{article.titulo}</h1>
             <p>{article.descripcion}</p>
             <img

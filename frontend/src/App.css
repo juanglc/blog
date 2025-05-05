@@ -10,4 +10,6 @@
   --box-shadow: 0 2px 8px rgba(0,0,0,0.18);
   --transition: all 0.2s;
 }
-
+body.no-navbar {
+  padding-top: 0;
+}

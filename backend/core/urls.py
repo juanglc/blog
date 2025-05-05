@@ -1,7 +1,7 @@
 # In backend/core/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from views.articles import get_all_articles, get_article_by_id, create_articles, update_article, get_article_by_tag, get_article_by_author, delete_article, get_author_by_article
+from views.articles import get_all_articles, get_article_by_id, create_articles, update_article, get_article_by_tag, get_article_by_author, delete_article, get_author_by_article, get_all_articles_by_author
 from views.tags import TagViewSet
 from django.conf import settings
 from django.conf.urls.static import static
@@ -22,6 +22,7 @@ urlpatterns = [
     # Put explicit paths BEFORE the router
     path('api/articles/create/', create_articles, name='create_articles'),
     path("api/articles/", get_all_articles),
+    path("api/articles/author/<str:author_id>/", get_all_articles_by_author),
     path("api/articles/<str:article_id>/", get_article_by_id),
     path("api/upload/image/", upload_image, name='upload_image'),
     path("api/articles/<str:article_id>/update/", update_article, name='update_article'),

@@ -108,3 +108,4 @@ def update_role(request, pk=None):
         print(f"Error updating user: {str(e)}")
         return Response({"error": f"An error occurred while updating the user: {str(e)}"},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
