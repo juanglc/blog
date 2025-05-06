@@ -169,6 +169,12 @@ hr {
     width: 100%;
 }
 
+.user-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -180,9 +186,15 @@ hr {
     }
 }
 
+/* Tablet responsiveness */
 @media (max-width: 768px) {
+    .request-details-page {
+        padding: 15px;
+    }
+
     .request-details-page h1 {
         font-size: 2rem;
+        margin-bottom: 1rem;
     }
 
     .request-header {
@@ -198,10 +210,94 @@ hr {
     .info-item {
         margin-bottom: 16px;
     }
+
+    .action-buttons, .navigation-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .cancel-button, .back-button {
+        width: 100%;
+        max-width: 300px;
+        text-align: center;
+    }
 }
 
-.user-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+/* Mobile specific enhancements */
+@media (max-width: 480px) {
+    .request-details-page {
+        padding: 10px;
+    }
+
+    .request-details-page h1 {
+        font-size: 1.8rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .request-card {
+        padding: 15px;
+    }
+
+    .request-header {
+        padding-bottom: 12px;
+        margin-bottom: 15px;
+    }
+
+    .request-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .status-badge {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+
+    .info-label {
+        font-size: 0.9rem;
+    }
+
+    .info-value {
+        padding: 6px;
+        font-size: 0.95rem;
+    }
+
+    .cancel-button, .back-button {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+    }
+
+    .spinner-wrapper {
+        margin: 30px 0;
+    }
+
+    .error-container {
+        padding: 15px;
+        font-size: 0.9rem;
+    }
+
+    .user-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+
+/* Support for very small screens */
+@media (max-width: 360px) {
+    .request-details-page h1 {
+        font-size: 1.6rem;
+    }
+
+    .request-card {
+        padding: 12px;
+    }
+
+    .request-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .info-label, .info-value {
+        font-size: 0.85rem;
+    }
 }

@@ -173,18 +173,32 @@ hr {
     }
 }
 
+.user-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Responsive styles for tablets */
 @media (max-width: 768px) {
+    .requests-page {
+        padding: 15px;
+    }
+
     .requests-page h1 {
         font-size: 2rem;
+        margin-bottom: 1rem;
     }
 
     .filter-buttons {
         flex-direction: column;
         align-items: center;
+        width: 100%;
     }
 
-    .filter-buttons button {
+    .filter-button {
         width: 100%;
+        max-width: 300px;
     }
 
     .requests-table {
@@ -194,10 +208,91 @@ hr {
     .requests-table th, .requests-table td {
         padding: 8px 10px;
     }
+
+    .button-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .new-request-button, .back-button {
+        width: 100%;
+        max-width: 300px;
+        text-align: center;
+    }
 }
 
-.user-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+/* Additional mobile-specific optimizations */
+@media (max-width: 480px) {
+    .requests-page {
+        padding: 10px;
+    }
+
+    .requests-page h1 {
+        font-size: 1.8rem;
+        padding-top: 0.5rem;
+    }
+
+    .filter-button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    .requests-table-container {
+        margin: 0 -10px;
+        width: calc(100% + 20px);
+    }
+
+    .requests-table {
+        font-size: 0.8rem;
+        display: block;
+    }
+
+    .requests-table th, .requests-table td {
+        padding: 6px 8px;
+    }
+
+    /* Style for mobile-optimized tables */
+    .requests-table thead {
+        display: none;
+    }
+
+    .requests-table tr {
+        display: block;
+        border-bottom: 2px solid var(--primary-light);
+        margin-bottom: 10px;
+    }
+
+    .requests-table td {
+        display: flex;
+        justify-content: space-between;
+        text-align: right;
+        border-bottom: 1px solid var(--primary-light);
+    }
+
+    .requests-table td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        text-align: left;
+        padding-right: 10px;
+    }
+
+    .requests-table td:last-child {
+        border-bottom: none;
+    }
+
+    .new-request-button, .back-button {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .error-container, .no-requests {
+        padding: 15px;
+        font-size: 0.9rem;
+    }
+
+    .user-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
 }
