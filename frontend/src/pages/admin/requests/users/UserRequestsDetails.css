@@ -10,11 +10,13 @@
     background-color: var(--background-color);
     animation: fadeIn 0.5s ease-out;
     min-height: 100vh;
+    box-sizing: border-box;
 }
 
 .user-request-details > * {
     max-width: 800px;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .user-wrapper {
@@ -144,6 +146,10 @@ hr {
 }
 
 @media (max-width: 768px) {
+    .user-request-details {
+        padding: 15px;
+    }
+
     .request-detail {
         margin-bottom: 16px;
     }
@@ -154,5 +160,57 @@ hr {
 
     .user-request-details h1 {
         font-size: 2rem;
+    }
+}
+
+/* Mobile optimizations specifically for portrait mode */
+@media (max-width: 480px) {
+    .user-request-details {
+        padding: 10px;
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    .user-request-details > * {
+        width: calc(100% - 20px);
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .user-request-details h1 {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        padding: 0 10px;
+    }
+
+    .request-details {
+        padding: 15px;
+        width: calc(100% - 20px);
+    }
+
+    .back-button {
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
+
+    .action-buttons {
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    hr {
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .view-user-profile-button {
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
     }
 }
