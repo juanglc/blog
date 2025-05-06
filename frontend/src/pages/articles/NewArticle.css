@@ -8,14 +8,19 @@
     box-shadow: var(--box-shadow);
     color: var(--text-color);
     min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.new-article-container > * {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .form-group {
     margin-bottom: 1.5rem;
     width: 100%;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    box-sizing: border-box;
 }
 
 .form-group label {
@@ -24,7 +29,6 @@
     font-weight: 500;
     color: var(--text-color);
     width: 100%;
-    max-width: 800px;
 }
 
 input[type="text"],
@@ -37,7 +41,7 @@ textarea {
     color: var(--text-color);
     font-size: 1rem;
     resize: none;
-    max-width: 800px;
+    box-sizing: border-box;
 }
 
 input[type="text"]:focus,
@@ -52,7 +56,8 @@ textarea:focus {
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 10px;
-    max-width: 800px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .tag-checkbox {
@@ -75,8 +80,7 @@ textarea:focus {
     cursor: pointer;
     display: flex;
     align-items: center;
-    width: 100%;
-    max-width: 800px;
+    width: auto;
 }
 
 .cancel-button {
@@ -99,9 +103,8 @@ textarea:focus {
     display: flex;
     gap: 1rem;
     margin-top: 2rem;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 button {
@@ -130,7 +133,7 @@ button:disabled {
     font-size: 0.85rem;
     margin-top: 0.25rem;
     width: 100%;
-    max-width: 800px;
+    box-sizing: border-box;
 }
 
 .markdown-toolbar {
@@ -142,9 +145,8 @@ button:disabled {
     padding: 8px;
     border: 1px solid var(--primary-light);
     border-radius: var(--border-radius);
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .markdown-toolbar button {
@@ -160,7 +162,6 @@ button:disabled {
     cursor: pointer;
     font-size: 0.9rem;
     transition: var(--transition);
-
 }
 
 .markdown-toolbar button:hover {
@@ -176,9 +177,8 @@ button:disabled {
     min-height: 300px;
     overflow-y: auto;
     color: var(--text-color);
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .preview-button {
@@ -221,9 +221,8 @@ button:disabled {
     padding: 10px;
     background-color: var(--card-bg);
     border: 1px solid var(--primary-light);
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .debug-info pre {
@@ -232,6 +231,7 @@ button:disabled {
     color: var(--text-color);
     background-color: var(--card-bg);
     width: 100%;
+    box-sizing: border-box;
 }
 
 .image-preview {
@@ -255,4 +255,33 @@ button:disabled {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 850px) {
+    .new-article-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .new-article-container {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .error-message,
+    .debug-info,
+    .preview,
+    .markdown-toolbar,
+    .form-actions,
+    .form-group,
+    .tags-container {
+        width: 100%;
+    }
 }
