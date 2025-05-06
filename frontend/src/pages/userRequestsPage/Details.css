@@ -122,7 +122,8 @@
 .navigation-buttons {
     display: flex;
     justify-content: center;
-    margin: 20px 0;
+    margin: 20px auto;
+    width: 100%;
 }
 
 .back-button {
@@ -133,6 +134,8 @@
     color: white;
     cursor: pointer;
     transition: var(--transition);
+    margin: 0 auto;
+    display: block;
 }
 
 .back-button:hover {
@@ -225,6 +228,19 @@ hr {
 }
 
 @media (max-width: 480px) {
+
+    .navigation-buttons {
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .back-button {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        max-width: 100%;
+    }
+
     .request-details-page {
         padding: 10px;
         box-sizing: border-box;
