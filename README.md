@@ -1,13 +1,18 @@
-
 # 🎮 GAMEBLOG
 
 ## 👥 Integrantes
-
-- **Luis Alejandro Téllez Forero**  
-- **Juan Guillermo López Cortés**  
-- **Sergio Tovar Perdigón**  
+ 
+- **Juan Guillermo López Cortés**
+- **Luis Alejandro Téllez Forero** 
+- **Sergio Tovar Perdigón**
 
 ---
+
+## 🌐 Sitio Web
+
+Puedes visitar la aplicación desplegada aquí:  
+🔗 [https://blog-nine-eta-12.vercel.app](https://blog-nine-eta-12.vercel.app)
+
 
 ## 🛠️ Tecnologías Usadas
 
@@ -17,26 +22,49 @@
 
 ### ⚙️ Frameworks
 
-- **Django** (Backend)  
-- **React** (Frontend)
+- **Django** (Backend con MongoDB)  
+- **React + TypeScript (Vite)** (Frontend)
 
 ### 📚 Librerías
 
-#### ✍️ Markdown Editor
+#### ✍️ Editor de Markdown
 
 - `@uiw/react-md-editor`
 
-#### 🖼️ Imágenes
+#### 🖼️ Manejo de Imágenes
 
 - `react-dropzone` → para subir imágenes mediante *drag-and-drop*.  
 - `axios` → para enviar imágenes al backend.  
-- `react-image-preview` o `FileReader` + `useState` → para mostrar vista previa de la imagen antes de enviarla.
-
+- `react-image-preview` o `FileReader` + `useState` → para mostrar vista previa de imágenes antes de enviarlas.
+- `flowbite-react` → para utilizar componentes prebuildeados de flowbite como Spinners o Alertas.
 ---
 
 ## ❓ ¿Para qué sirve?
 
-**GAMEBLOG** es un blog dedicado a los videojuegos, donde los usuarios pueden compartir, leer y aprender de artículos sobre sus títulos favoritos. Los administradores se encargan del mantenimiento de la plataforma, promoviendo una comunidad activa donde se comparten anécdotas, experiencias y gustos por los juegos más emblemáticos.
+**GAMEBLOG** es una plataforma digital centrada en el mundo de los videojuegos. Los usuarios pueden leer artículos segmentados por autores y etiquetas, compartir contenido, y aprender sobre sus títulos favoritos. La plataforma fomenta la participación de la comunidad, con funcionalidades adaptadas según el rol del usuario.
+
+---
+
+## 👤 Funcionalidades para Usuarios
+
+- 📖 **Lectura de artículos**, filtrables por etiquetas y autores.  
+- ✍️ **Solicitud para ser escritor**.  
+- 📝 **Creación de artículos (sólo para escritores y administradores)**:  
+  - Se guardan automáticamente como **borrador**.
+  - El artículo solo se publica si el usuario **envía una solicitud** y esta es **aprobada por un administrador**.
+  - Los usuarios pueden **editar sus borradores** antes de enviarlos.
+  - Las **actualizaciones** también se manejan como borradores hasta ser enviadas.
+- 🔁 Si un artículo enviado es **rechazado**, vuelve a estado de **borrador** para poder ser editado y reenviado.
+- ✅ Si un artículo enviado es **aprobado**, se hace la respectiva actualización o creación del artículo, dependiendo de su tipo.
+
+---
+
+## 🔧 Funcionalidades para Administradores
+
+- ✅ **Aprobación o rechazo** de solicitudes de:
+  - Nuevos escritores.
+  - Publicación o actualización de artículos.
+- 🕹️ Gestión activa de la comunidad y contenido publicado.
 
 ---
 
@@ -46,7 +74,8 @@
 
 - Proceso **secuencial**:  
   `Análisis` → `Diseño` → `Desarrollo` → `Pruebas` → `Entrega`
-- Fácil de gestionar, pero **rígida** y poco flexible ante cambios.
+- Ideal para proyectos con requisitos claros desde el inicio.  
+- Fácil de gestionar, aunque menos flexible ante cambios.
 
 ---
 
@@ -59,53 +88,21 @@
 ### 🎯 Objetivos Específicos
 
 - Publicar **contenido original** (noticias, reseñas, avances) sobre videojuegos actuales y clásicos.  
-- Implementar un **sistema de registro e inicio de sesión seguro**, con diferentes roles: **lector**, **escritor** y **administrador**.
+- Implementar un **sistema de registro e inicio de sesión**, con distintos roles:  
+  - **Lector**  
+  - **Escritor (previa aprobación)**  
+  - **Administrador (previa aprobación)**
 
 ---
 
-## 🗃️ Base de Datos (Estructura)
+## 🚀 Estado Actual
 
-### 👤 Usuarios
+- Backend funcional con **Django + MongoDB**.  
+- Frontend construido con **React 19 + Vite + TypeScript**.  
 
-```json
-{
-  "_id": "u123",
-  "nombre": "Pedro Pérez",
-  "correo": "pedro@email.com",
-  "contraseña": "hashed_password", 
-  "rol": "lector" // Roles posibles: lector, escritor, admin
-}
-```
+---
 
-### 📝 Artículos
+## 📌 Notas Finales
 
-```json
-{
-  "_id": "a001",
-  "titulo": "Top 10 RPG del año",
-  "contenido_markdown": "### Lista de RPGs\n1. Final Fantasy...",
-  "imagen_url": "/uploads/articulo1.jpg",
-  "tags": ["t001", "t002"],
-  "autor_id": "u123",
-  "fecha_creacion": "2025-04-08T14:33:00Z"
-}
-```
-
-### 🔖 Tags
-
-```json
-{
-  "_id": "t001",
-  "nombre": "RPG",
-  "descripcion": "Videojuegos de rol"
-}
-```
-
-### ❤️ Favoritos
-
-```json
-{
-  "_id": "u123", 
-  "tags": ["t001", "t002", "t003"]
-}
-```
+- Este proyecto está pensado para fomentar la creatividad, la crítica constructiva y el gusto por los videojuegos.
+- La gestión de artículos garantiza calidad y evita contenido no deseado gracias a la moderación de los administradores.
