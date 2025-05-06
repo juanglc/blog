@@ -135,6 +135,7 @@ table tr:last-child td {
     .user-requests {
         padding: 10px;
         overflow-x: hidden;
+        width: 100%;
     }
 
     .user-requests > * {
@@ -143,29 +144,57 @@ table tr:last-child td {
     }
 
     .user-requests h1 {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
     }
 
-    /* Make table responsive on mobile */
+    /* Card layout for table rows instead of horizontal scrolling */
     table {
         display: block;
-        overflow-x: auto;
-        white-space: nowrap;
         width: 100%;
-        font-size: 0.85rem;
-        -webkit-overflow-scrolling: touch;
+        border: none;
+        box-shadow: none;
+        background-color: transparent;
     }
 
-    table th, table td {
-        padding: 6px 8px;
+    table thead {
+        display: none; /* Hide table headers */
     }
 
-    /* Hide some less important columns on mobile */
-    table th:nth-child(1),
-    table td:nth-child(1),
-    table th:nth-child(2),
-    table td:nth-child(2) {
-        display: none;
+    table tbody {
+        width: 100%;
+        display: block;
+    }
+
+    table tr {
+        display: block;
+        margin-bottom: 1rem;
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        padding: 0;
+    }
+
+    table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 10px;
+        font-size: 0.8rem;
+        text-align: right;
+        border-bottom: 1px solid rgba(74, 111, 165, 0.1);
+    }
+
+    table td:before {
+        content: attr(data-label);
+        font-weight: 700;
+        margin-right: 10px;
+        text-align: left;
+        color: var(--primary-color);
+        min-width: 40%;
+    }
+
+    table td:last-child {
+        border-bottom: none;
     }
 
     .pagination {
@@ -178,6 +207,14 @@ table tr:last-child td {
 
     .pagination button {
         padding: 5px 10px;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
+        min-width: 35px;
+    }
+
+    .pagination-ellipsis {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 35px;
     }
 }
