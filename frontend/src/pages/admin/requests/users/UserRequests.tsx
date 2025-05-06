@@ -194,9 +194,6 @@ const UserRequests = () => {
                     <thead>
                     <tr>
                         <th>ID</th>
-                        <th>User</th>
-                        <th>Current Role</th>
-                        <th>Requested Role</th>
                         <th>Status</th>
                         <th>Date</th>
                     </tr>
@@ -205,9 +202,6 @@ const UserRequests = () => {
                     {requests.map((request) => (
                         <tr key={request._id} onClick={() => handleRequestClick(request._id)}>
                             <td data-label="ID">{request._id}</td>
-                            <td data-label="User">{request.id_usuario}</td>
-                            <td data-label="Current Role">{request.rol_actual}</td>
-                            <td data-label="Requested Role">{request.rol_deseado}</td>
                             <td data-label="Status">{request.estado}</td>
                             <td data-label="Date">{formatDate(request.fecha)}</td>
                         </tr>
