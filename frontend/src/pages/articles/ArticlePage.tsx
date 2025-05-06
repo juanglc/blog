@@ -46,8 +46,9 @@ export default function ArticlePage() {
     const userRole = user.rol;
     const userId = user._id;
 
-    // State for permission to render action buttons
+    // Separate states for edit and delete permissions
     const [canEditArticle, setCanEditArticle] = useState(false);
+    const [canDeleteArticle, setCanDeleteArticle] = useState(false);
 
     useEffect(() => {
         if (!id) {
@@ -61,19 +62,26 @@ export default function ArticlePage() {
                 const response = await axios.get(`${API_URL}/api/articles/${id}`);
                 const fetchedArticle = response.data;
 
-                // Check permissions after article data is loaded
-                const hasPermission =
+                // Check edit permission - only author can edit (admin or writer)
+                const hasEditPermission =
                     (userRole === 'admin' && userId === fetchedArticle.autor_id) ||
+                    (userRole === 'escritor' && userId === fetchedArticle.autor_id);
+
+                // Check delete permission - admins can delete any article, authors can delete their own
+                const hasDeletePermission =
+                    userRole === 'admin' ||
                     (userRole === 'escritor' && userId === fetchedArticle.autor_id);
 
                 console.log("Permission check:", {
                     userRole,
                     userId,
                     authorId: fetchedArticle.autor_id,
-                    hasPermission
+                    hasEditPermission,
+                    hasDeletePermission
                 });
 
-                setCanEditArticle(hasPermission);
+                setCanEditArticle(hasEditPermission);
+                setCanDeleteArticle(hasDeletePermission);
                 setArticle(fetchedArticle);
             } catch (err) {
                 console.error('Error fetching article:', err);
@@ -268,7 +276,7 @@ export default function ArticlePage() {
                 </div>
             </div>
 
-            {/* Conditionally render buttons based on permission state */}
+            {/* Conditionally render buttons based on permission states */}
             {canEditArticle && (
                 <div className="article-actions">
                     <hr/>
@@ -280,6 +288,11 @@ export default function ArticlePage() {
                         Update Article
                     </button>
                     <hr />
+                </div>
+            )}
+
+            {canDeleteArticle && (
+                <div className="article-actions">
                     <button
                         onClick={openDeleteModal}
                         className="delete-button">
@@ -292,9 +305,7 @@ export default function ArticlePage() {
 
             <div className="navigation-buttons">
                 <button
-                    onClick={() => {
-                        navigate(-1)
-                    }}
+                    onClick={() => navigate(-1)}
                     className="back-button">
                     Volver
                 </button>
