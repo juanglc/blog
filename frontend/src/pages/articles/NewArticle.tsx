@@ -358,11 +358,11 @@ export default function NewArticle() {
 
             let pendingArticleId;
 
-            // If we have a draft, update it instead of creating a new one
+            // If we have a draft, update it but KEEP it as a draft
             if (draftId) {
                 addDebug(`Using existing draft: ${draftId}`);
 
-                // Update draft but set borrador: false
+                // Update draft keeping it as a draft
                 const updateData = {
                     titulo: title,
                     descripcion: description,
@@ -372,14 +372,14 @@ export default function NewArticle() {
                     autor_id: autorId,
                     fecha_actualizacion: new Date().toISOString(),
                     tipo: "nuevo",
-                    borrador: false  // No longer a draft
+                    borrador: true  // Keep as draft
                 };
 
                 await axios.put(`${API_URL}/api/drafts/update/${draftId}/`, updateData);
                 pendingArticleId = draftId;
-                addDebug(`Updated draft ${draftId} to be a formal submission`);
+                addDebug(`Updated draft ${draftId}`);
             } else {
-                // Create new pending article (not a draft)
+                // Create new pending article as a draft
                 const pendingArticleData = {
                     titulo: title,
                     descripcion: description,
@@ -389,7 +389,7 @@ export default function NewArticle() {
                     autor_id: autorId,
                     fecha_creacion: new Date().toISOString(),
                     tipo: "nuevo",
-                    borrador: false
+                    borrador: true  // Create as draft
                 };
 
                 const pendingResponse = await axios.post(
@@ -399,6 +399,17 @@ export default function NewArticle() {
 
                 pendingArticleId = pendingResponse.data.pending_article._id;
                 addDebug(`Created new pending article with ID: ${pendingArticleId}`);
+            }
+
+            // Push the draft to convert borrador to false
+            try {
+                const responsePush = await axios.put(
+                    `${API_URL}/api/drafts/push/${pendingArticleId}/`
+                );
+                addDebug(`Draft pushed successfully: ${JSON.stringify(responsePush.data)}`);
+            } catch (pushErr: any) {
+                addDebug(`Error pushing draft: ${pushErr.message}`);
+                throw pushErr; // Re-throw to handle in the outer catch block
             }
 
             // Create article request with the pending article ID
@@ -421,7 +432,7 @@ export default function NewArticle() {
             // Mark form as submitted to prevent further edits
             setFormSubmitted(true);
 
-            // Reset form fields (optional - will clear the form but not be visible due to redirect)
+            // Reset form fields
             setTitle('');
             setDescription('');
             setContent('');

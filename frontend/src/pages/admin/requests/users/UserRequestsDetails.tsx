@@ -5,6 +5,7 @@ import { API_URL } from '../../../../api/config.ts';
 import { CustomAlert } from '../../../../components/alerts/Alerts.tsx';
 import './UserRequestsDetails.css';
 import '../../../../App.css';
+import { Spinner } from '../../../../components/Spinner.tsx';
 
 const keyMapping: { [key: string]: string } = {
     _id: 'Request ID',
@@ -80,7 +81,36 @@ const UserRequestDetails = () => {
         }
     };
 
-    if (loading) return <div className="loading">Loading request details...</div>;
+    if (loading) {
+        return (
+            <div className="user-request-details">
+                <h1 className="skeleton-line title-line"></h1>
+
+                <div className="spinner-wrapper" style={{ marginBottom: "20px", display: "flex", justifyContent: "center", padding: "20px" }}>
+                    <Spinner size="medium" color="var(--primary-color)" />
+                </div>
+
+                <div className="request-details">
+                    {[...Array(7)].map((_, index) => (
+                        <div key={index} className="request-detail">
+                            <strong className="skeleton-line" style={{ width: '120px' }}></strong>
+                            <span className="skeleton-line" style={{ width: '200px' }}></span>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="action-buttons">
+                    <div className="skeleton-line" style={{ width: '100px', height: '40px' }}></div>
+                    <div className="skeleton-line" style={{ width: '100px', height: '40px' }}></div>
+                </div>
+
+                <hr className="skeleton-line" />
+
+                <div className="skeleton-line" style={{ width: '150px', height: '40px', marginTop: '20px' }}></div>
+            </div>
+        );
+    }
+
     if (error) return <div className="error">{error}</div>;
 
     return (

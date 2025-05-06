@@ -34,8 +34,6 @@ def get_all_article_requests(request):
         enriched = []
         for req in article_requests:
             serialized = serialize_full_article_requests(req, db.users, db.pending_articles, db.articles)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
 
         return Response({
@@ -73,8 +71,6 @@ def get_active_article_requests(request):
         enriched = []
         for req in active_requests:
             serialized = serialize_full_article_requests(req, db.users, db.pending_articles, db.articles)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
         return Response({
             "requests": enriched,
@@ -112,8 +108,6 @@ def get_rejected_article_requests(request):
         enriched = []
         for req in rejected_requests:
             serialized = serialize_full_article_requests(req, db.users, db.pending_articles, db.articles)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
         return Response({
             "requests": enriched,
@@ -164,8 +158,6 @@ def get_approved_article_requests(request):
         enriched = []
         for req in approved_requests:
             serialized = serialize_full_article_requests(req, db.users, db.pending_articles, db.articles)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
         return Response({
             "requests": enriched,
@@ -203,8 +195,6 @@ def get_approved_article_requests_by_user(request, user_id):
         enriched = []
         for req in approved_requests:
             serialized = serialize_full_article_requests(req, db.users, db.pending_articles, db.articles)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
         return Response({
             "requests": enriched,
@@ -242,8 +232,6 @@ def get_rejected_article_requests_by_user(request, user_id):
         enriched = []
         for req in rejected_requests:
             serialized = serialize_full_article_requests(req, db.users, db.pending_articles, db.articles)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
         return Response({
             "requests": enriched,
@@ -281,8 +269,6 @@ def get_active_article_requests_by_user(request, user_id):
         enriched = []
         for req in active_requests:
             serialized = serialize_full_article_requests(req, db.users, db.pending_articles, db.articles)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
         return Response({
             "requests": enriched,
@@ -349,7 +335,6 @@ def reject_article_request(request, request_id):
 def create_article_request(request):
     try:
         data = request.data
-        print(f"[DEBUG] Datos recibidos para crear una solicitud de artículo: {data}")
 
         # Find all request documents to determine the next ID
         all_requests = list(db.article_requests.find(

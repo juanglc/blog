@@ -35,8 +35,6 @@ def get_all_user_requests(request):
         enriched = []
         for req in user_requests:
             serialized = serialize_full_user_requests(req, db.users)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
 
         return Response({
@@ -76,8 +74,6 @@ def get_active_user_requests(request):
         enriched = []
         for req in active_requests:
             serialized = serialize_full_user_requests(req, db.users)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
 
         return Response({
@@ -116,8 +112,6 @@ def get_denied_user_requests(request):
         enriched = []
         for req in denied_requests:
             serialized = serialize_full_user_requests(req, db.users)
-            print(f"[DEBUG] Request: {req}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
 
         return Response({
@@ -142,8 +136,6 @@ def get_user_request_by_id(request, request_id):
 
         # Add debugging to see exactly what's happening
         serialized = serialize_full_user_requests(user_request, db.users)
-        print(f"[DEBUG] Request: {user_request}")
-        print(f"[DEBUG] Serialized: {serialized}")
 
         return JsonResponse(serialized)
     except Exception as e:
@@ -192,7 +184,6 @@ def get_approved_user_requests(request):
 def create_user_request(request, user_id):
     try:
         data = request.data
-        print(f"[DEBUG] Datos recibidos para crear una solicitud de usuario: {data}")
 
         # Find all documents and determine the highest ID number
         all_requests = list(db.user_requests.find(
@@ -218,8 +209,6 @@ def create_user_request(request, user_id):
         # Format with leading zeros for consistent numbering
         request_id = f"req_user_{next_num:03d}"
 
-        print(f"[DEBUG] Generated new request ID: {request_id}")
-
         # Verify this ID doesn't already exist
         existing = db.user_requests.find_one({"_id": request_id})
         if existing:
@@ -227,7 +216,6 @@ def create_user_request(request, user_id):
             import time
             timestamp = int(time.time())
             request_id = f"req_user_{next_num:03d}_{timestamp}"
-            print(f"[DEBUG] ID collision detected! Using timestamped ID: {request_id}")
 
         new_request = {
             "_id": request_id,

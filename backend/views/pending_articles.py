@@ -35,8 +35,6 @@ def get_all_pending_articles_by_author(request, autor_id):
         enriched = []
         for pa in pending_articles:
             serialized = serialize_full_pending_articles(pa, db.users, db.tags)
-            print(f"[DEBUG] Pending Article: {pa}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
 
         return Response({
@@ -60,9 +58,6 @@ def get_pending_article_by_id(request, pending_article_id):
             return Response({"error": "Artículo pendiente no encontrado"}, status=404)
 
         serialized = serialize_full_pending_articles(pending_article, db.users, db.tags)
-        print(f"[DEBUG] Pending Article: {pending_article}")
-        print(f"[DEBUG] Serialized: {serialized}")
-
         return Response(serialized)
     except Exception as e:
         print(f"[ERROR] Error al obtener el artículo pendiente: {e}")
@@ -72,8 +67,6 @@ def get_pending_article_by_id(request, pending_article_id):
 def create_pending_article(request):
     try:
         data = request.data
-        print(f"[DEBUG] Datos recibidos para crear un artículo pendiente o borrador: {data}")
-
         # Find all documents and determine the highest ID number
         all_articles = list(db.pending_articles.find(
             {"_id": {"$regex": "^pa\\d+$"}},
@@ -145,9 +138,6 @@ def create_pending_article(request):
         }, status=201)
 
     except Exception as e:
-        import traceback
-        print(f"[ERROR] Error al crear el artículo pendiente: {e}")
-        print(traceback.format_exc())
         return JsonResponse({"error": f"Error al crear el artículo pendiente: {str(e)}"}, status=500)
 
 @api_view(['PUT'])
@@ -187,10 +177,17 @@ def check_pending_update(request, pending_article_id):
             {"_id": 1}
         ))
 
-        if len(result) > 0:  # .count() está deprecado en pymongo 4.x, mejor usar next()
-            return JsonResponse({"error": "Ya existe una solicitud pendiente para este artículo"}, status=400)
+        # Check if there are any pending updates
+        if len(result) > 0:
+            return JsonResponse({
+                "hasPendingUpdate": True,
+                "message": "Ya existe una solicitud pendiente para este artículo"
+            }, status=200)  # Changed to 200
 
-        return JsonResponse({"message": "No hay solicitudes pendientes para este artículo"}, status=200)
+        return JsonResponse({
+            "hasPendingUpdate": False,
+            "message": "No hay solicitudes pendientes para este artículo"
+        }, status=200)
 
     except Exception as e:
         print(f"[ERROR] Error al verificar artículo pendiente: {e}")

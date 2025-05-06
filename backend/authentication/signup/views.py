@@ -47,7 +47,7 @@ def sign_up(request):
             "correo": email,
             "telefono": data.get('telefono'),
             "nombre": data.get('nombre'),
-            "role": "lector"  # Default role
+            "rol": "lector"  # Default role
         }
         db["users"].insert_one(new_user)
 

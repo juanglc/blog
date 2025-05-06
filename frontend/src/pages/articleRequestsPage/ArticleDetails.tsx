@@ -66,6 +66,7 @@ const ArticleRequestDetails = () => {
 
         try {
             const token = localStorage.getItem('token');
+            // First, cancel the article request
             await axios.put(
                 `${API_URL}/api/requests/articles/${requestId}/cancel/`,
                 {},
@@ -76,9 +77,26 @@ const ArticleRequestDetails = () => {
                     }
                 }
             );
+
+            // Then, convert the pending article to draft
+            if (request?.id_articulo_nuevo) {
+                await axios.put(
+                    `${API_URL}/api/pending_articles/${request.id_articulo_nuevo}/to_draft/`,
+                    {},
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+                console.log('Pending article converted to draft successfully');
+            }
+
             setAlert({ type: "success", message: "Article request cancelled successfully!" });
             setTimeout(() => navigate('/requests/articles'), 2000);
         } catch (err) {
+            console.error("Error cancelling request:", err);
             setAlert({ type: "error", message: "Error cancelling article request." });
         }
     };
@@ -182,7 +200,9 @@ const ArticleRequestDetails = () => {
                 {request?.id_articulo_nuevo && (request?.estado === 'pendiente' || request?.estado === 'denegado') && (
                     <button
                         className="view-pending-article-button"
-                        onClick={() => navigate(`/admin/pending-article/${request.id_articulo_nuevo}`)}
+                        onClick={() => navigate(`/pending-article/${request.id_articulo_nuevo}`, {
+                            state: { validAccess: true }
+                        })}
                     >
                         View Pending Article
                     </button>

@@ -235,9 +235,12 @@ export default function UpdateArticle() {
                     addDebug(`Checking pending updates for article ID: ${id}`);
                     const pendingRes = await fetch(`${API_URL}/api/pending_articles/check/${id}/`);
 
-                    if (pendingRes.status === 400) {
-                        setHasPendingUpdate(true);
-                        addDebug('There is already a pending update for this article');
+                    if (pendingRes.ok) {
+                        const data = await pendingRes.json();
+                        setHasPendingUpdate(data.hasPendingUpdate);
+                        addDebug(data.hasPendingUpdate
+                            ? 'There is already a pending update for this article'
+                            : 'No pending updates found for this article');
                     }
                 } catch (error) {
                     addDebug(`Error checking pending updates: ${error}`);
@@ -483,48 +486,34 @@ export default function UpdateArticle() {
         addDebug("Form validated, starting submission");
 
         try {
-            // Use push_draft if we have a draft, otherwise create one and then push it
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            const autorId = userData._id || 'unknown';
+
+            let pendingArticleId;
+
+            // If we have a draft, update it but KEEP it as a draft
             if (draftId) {
-                addDebug(`Pushing existing draft: ${draftId}`);
+                addDebug(`Updating existing draft: ${draftId}`);
 
-                // First update the draft with latest values
-                await axios.put(
-                    `${API_URL}/api/drafts/update/${draftId}/`,
-                    {
-                        titulo: formData.titulo,
-                        descripcion: formData.descripcion,
-                        contenido_markdown: formData.contenido_markdown,
-                        imagen_url: formData.imagen_url,
-                        tags: selectedTags,
-                        borrador: false  // No longer a draft
-                    }
-                );
+                // Update draft keeping it as a draft
+                const updateData = {
+                    titulo: formData.titulo,
+                    descripcion: formData.descripcion,
+                    contenido_markdown: formData.contenido_markdown,
+                    imagen_url: formData.imagen_url,
+                    tags: selectedTags,
+                    autor_id: autorId,
+                    fecha_actualizacion: new Date().toISOString(),
+                    tipo: "update",
+                    borrador: true,  // Keep as draft
+                    id_articulo_original: id
+                };
 
-                // Then push the draft (converts to pending article and creates request)
-                const pushResponse = await axios.post(
-                    `${API_URL}/api/drafts/push/${draftId}/`
-                );
-
-                addDebug(`Draft pushed successfully: ${JSON.stringify(pushResponse.data)}`);
-
-                // Mark form as submitted to prevent further edits
-                setFormSubmitted(true);
-
-                setAlert({
-                    message: "Your update request has been submitted successfully!",
-                    type: "success"
-                });
-
-                // Navigate after a short delay
-                setTimeout(() => {
-                    navigate(`/articles/${id}`);
-                }, 1500);
+                await axios.put(`${API_URL}/api/drafts/update/${draftId}/`, updateData);
+                pendingArticleId = draftId;
+                addDebug(`Updated draft ${draftId}`);
             } else {
-                // No draft exists, create a new one and push it
-                const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                const autorId = userData._id || 'unknown';
-
-                // Create new pending article
+                // Create new pending article as a draft
                 const pendingArticleData = {
                     titulo: formData.titulo,
                     descripcion: formData.descripcion,
@@ -534,7 +523,7 @@ export default function UpdateArticle() {
                     autor_id: autorId,
                     fecha_creacion: new Date().toISOString(),
                     tipo: "update",
-                    borrador: false,
+                    borrador: true,  // Create as draft
                     id_articulo_original: id
                 };
 
@@ -543,49 +532,62 @@ export default function UpdateArticle() {
                     pendingArticleData
                 );
 
-                const pendingArticleId = pendingResponse.data.pending_article._id;
+                pendingArticleId = pendingResponse.data.pending_article._id;
                 addDebug(`Created new pending article with ID: ${pendingArticleId}`);
-
-                // Create the article request using the pending article ID
-                const articleRequestData = {
-                    autor_id: autorId,
-                    tipo: "update",
-                    id_articulo_nuevo: pendingArticleId,
-                    id_articulo_original: id
-                };
-
-                addDebug(`Sending article request data: ${JSON.stringify(articleRequestData)}`);
-
-                const requestResponse = await axios.post(
-                    `${API_URL}/api/requests/articles/`,
-                    articleRequestData
-                );
-
-                const requestResult = requestResponse.data;
-
-                if (requestResponse.status >= 400) {
-                    throw new Error(requestResult.error || 'Failed to create article request');
-                }
-
-                addDebug(`Article request created successfully: ${JSON.stringify(requestResult)}`);
-
-                // Mark form as submitted to prevent further edits
-                setFormSubmitted(true);
-
-                setAlert({
-                    message: "Your update request has been submitted for approval.",
-                    type: "success"
-                });
-
-                // Navigate after a short delay
-                setTimeout(() => {
-                    navigate(`/articles/${id}`);
-                }, 1500);
             }
+
+            // Push the draft to convert borrador to false
+            try {
+                const responsePush = await axios.put(
+                    `${API_URL}/api/drafts/push/${pendingArticleId}/`
+                );
+                addDebug(`Draft pushed successfully: ${JSON.stringify(responsePush.data)}`);
+            } catch (pushErr: any) {
+                addDebug(`Error pushing draft: ${pushErr.message}`);
+                throw pushErr; // Re-throw to handle in the outer catch block
+            }
+
+            // Create article request with the pending article ID
+            const articleRequestData = {
+                autor_id: autorId,
+                tipo: "update",
+                id_articulo_nuevo: pendingArticleId,
+                id_articulo_original: id
+            };
+
+            addDebug(`Sending article request data: ${JSON.stringify(articleRequestData)}`);
+
+            const articleRequestResponse = await axios.post(
+                `${API_URL}/api/requests/articles/`,
+                articleRequestData
+            );
+
+            const articleRequest = articleRequestResponse.data;
+            addDebug(`Article request created successfully: ${JSON.stringify(articleRequest)}`);
+
+            // Mark form as submitted to prevent further edits
+            setFormSubmitted(true);
+
+            setAlert({
+                message: "Your update request has been submitted for approval.",
+                type: "success"
+            });
+
+            // Navigate after a short delay
+            setTimeout(() => {
+                navigate(`/articles/${id}`);
+            }, 1500);
+
         } catch (err: any) {
             console.error('Error updating article:', err);
             setError('Failed to update article');
             addDebug(`Error updating article: ${err.message}`);
+
+            if (err.response) {
+                addDebug(`Final error status: ${err.response.status}`);
+                addDebug(`Final error data: ${JSON.stringify(err.response.data)}`);
+            }
+
             setAlert({
                 message: `Error submitting update: ${err.message}`,
                 type: "error"

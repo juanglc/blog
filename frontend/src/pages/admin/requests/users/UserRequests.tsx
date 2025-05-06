@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_URL } from '../../../../api/config.ts';
 import './UserRequests.css';
 import '../../../../App.css';
+import { Spinner } from '../../../../components/Spinner.tsx';
 
 interface UserRequest {
     _id: string;
@@ -108,7 +109,51 @@ const UserRequests = () => {
         return pageNumbers;
     };
 
-    if (loading) return <div className="loading">Loading user requests...</div>;
+    if (loading) {
+        return (
+            <div className="user-requests">
+                <h1 className="skeleton-line title-line"></h1>
+
+                <div className="filter-buttons">
+                    <div className="skeleton-line" style={{ width: '100px' }}></div>
+                    <div className="skeleton-line" style={{ width: '100px' }}></div>
+                    <div className="skeleton-line" style={{ width: '100px' }}></div>
+                </div>
+
+                <div className="spinner-wrapper" style={{ marginBottom: "20px", display: "flex", justifyContent: "center", padding: "20px" }}>
+                    <Spinner size="medium" color="var(--primary-color)" />
+                </div>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                        <th className="skeleton-line"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {[1, 2, 3, 4, 5].map((item) => (
+                        <tr key={item}>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                            <td className="skeleton-line"></td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+
     if (error) return <div className="error">{error}</div>;
 
     return (

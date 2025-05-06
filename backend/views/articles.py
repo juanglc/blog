@@ -240,28 +240,23 @@ def create_articles(request):
 @api_view(['PUT'])
 def update_article(request, article_id):
     try:
-        print(f"[DEBUG] Updating article {article_id}")
         article = db.articles.find_one({"_id": article_id})
         if not article:
             return Response({"error": "Article not found"}, status=404)
 
         data = request.data
-        print(f"[DEBUG] Received update data: {data}")
 
         updates = {}
 
         # Only update fields that have changed
         if 'titulo' in data and data['titulo'] != article.get('titulo'):
             updates['titulo'] = data['titulo']
-            print(f"[DEBUG] Updating titulo: {data['titulo']}")
 
         if 'contenido_markdown' in data and data['contenido_markdown'] != article.get('contenido_markdown'):
             updates['contenido_markdown'] = data['contenido_markdown']
-            print(f"[DEBUG] Updating contenido_markdown")
 
         if 'imagen_url' in data and data['imagen_url'] != article.get('imagen_url'):
             updates['imagen_url'] = data['imagen_url']
-            print(f"[DEBUG] Updating imagen_url: {data['imagen_url']}")
 
         if 'tags' in data:
             tags = data.get("tags", [])
@@ -269,29 +264,23 @@ def update_article(request, article_id):
                 return Response({"error": "Tags must be an array of objects with an '_id' field"}, status=400)
             tag_ids = [tag["_id"] for tag in tags]
             updates['tags'] = tag_ids
-            print(f"[DEBUG] Updating tags: {tag_ids}")
 
         if 'descripcion' in data and data['descripcion'] != article.get('descripcion'):
             updates['descripcion'] = data['descripcion']
-            print(f"[DEBUG] Updating descripcion: {data['descripcion']}")
 
         # Always update fecha_actualizacion field
         current_time = datetime.now().isoformat()
         updates['fecha_actualizacion'] = current_time
-        print(f"[DEBUG] Setting fecha_actualizacion: {current_time}")
 
         # Only perform update if there are changes
         if updates:
-            print(f"[DEBUG] Performing update with fields: {list(updates.keys())}")
             result = db.articles.update_one(
                 {"_id": article_id},
                 {"$set": updates}
             )
-            print(f"[DEBUG] Update result: {result.modified_count} document(s) modified")
 
             # Verify the update
             updated_article = db.articles.find_one({"_id": article_id})
-            print(f"[DEBUG] Updated article fecha_actualizacion: {updated_article.get('fecha_actualizacion', 'Not found')}")
 
             return Response({
                 "message": "Article updated successfully",
@@ -299,7 +288,6 @@ def update_article(request, article_id):
                 "fecha_actualizacion": updates['fecha_actualizacion']
             })
         else:
-            print("[DEBUG] No changes detected")
             return Response({"message": "No changes to update"})
 
     except Exception as e:

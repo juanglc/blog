@@ -1,5 +1,4 @@
 # backend/views/users.py
-from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from pymongo import MongoClient
@@ -35,8 +34,6 @@ def get_all_users(request):
         enriched = []
         for user in users:
             serialized = serialize_users_full(user)
-            print(f"[DEBUG] User: {user}")
-            print(f"[DEBUG] Serialized: {serialized}")
             enriched.append(serialized)
 
         return Response ({
@@ -55,13 +52,10 @@ def get_all_users(request):
 @api_view(['GET'])
 def get_user_by_id(request, user_id):
     try:
-        print(f"[DEBUG] Obteniendo usuario por ID: {user_id}")
         user = db.users.find_one({"_id": user_id})
         if not user:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
         serialized = serialize_users_full(user)
-        print(f"[DEBUG] User: {user}")
-        print(f"[DEBUG] Serialized: {serialized}")
         return Response(serialized)
 
     except Exception as e:

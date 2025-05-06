@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './NavigationBar.css';
 import '../../App.css';
+import logo from '../../../logo/logo.png';
 
 const NavigationBar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,8 +56,8 @@ const NavigationBar = () => {
         <nav className="navbar" ref={navbarRef}>
             <div className="navbar-container">
                 {/* Logo - Always visible */}
-                <Link to="/" className="navbar-logo">
-                    <img src="/logo.png" className="navbar-logo-img" alt="GameBlog Logo" />
+                <Link to="/articles" className="navbar-logo">
+                    <img src={logo} className="navbar-logo-img" alt="GameBlog Logo" />
                     <span className="navbar-title">GameBlog</span>
                 </Link>
 
