@@ -81,6 +81,18 @@ const UserRequests = () => {
         setSearchParams({ page: '1' });
     };
 
+    // Format date to dd-mm-yyyy hh:mm
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+        return `${day}-${month}-${year} ${hours}:${minutes}`;
+    };
+
     const getPageNumbers = () => {
         const pageNumbers = [];
         const { page, pages } = pagination;
@@ -133,13 +145,11 @@ const UserRequests = () => {
                         <th className="skeleton-line"></th>
                         <th className="skeleton-line"></th>
                         <th className="skeleton-line"></th>
-                        <th className="skeleton-line"></th>
                     </tr>
                     </thead>
                     <tbody>
                     {[1, 2, 3, 4, 5].map((item) => (
                         <tr key={item}>
-                            <td className="skeleton-line"></td>
                             <td className="skeleton-line"></td>
                             <td className="skeleton-line"></td>
                             <td className="skeleton-line"></td>
@@ -179,32 +189,32 @@ const UserRequests = () => {
                     Approved
                 </button>
             </div>
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>User ID</th>
-                    <th>User</th>
-                    <th>Current Role</th>
-                    <th>Requested Role</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                </tr>
-                </thead>
-                <tbody>
-                {requests.map((request) => (
-                    <tr key={request._id} onClick={() => handleRequestClick(request._id)}>
-                        <td>{request._id}</td>
-                        <td>{request.id_usuario}</td>
-                        <td>{request.usuario}</td>
-                        <td>{request.rol_actual}</td>
-                        <td>{request.rol_deseado}</td>
-                        <td>{request.estado}</td>
-                        <td>{request.fecha}</td>
+            <div className="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Current Role</th>
+                        <th>Requested Role</th>
+                        <th>Status</th>
+                        <th>Date</th>
                     </tr>
-                ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {requests.map((request) => (
+                        <tr key={request._id} onClick={() => handleRequestClick(request._id)}>
+                            <td data-label="ID">{request._id}</td>
+                            <td data-label="User">{request.id_usuario}</td>
+                            <td data-label="Current Role">{request.rol_actual}</td>
+                            <td data-label="Requested Role">{request.rol_deseado}</td>
+                            <td data-label="Status">{request.estado}</td>
+                            <td data-label="Date">{formatDate(request.fecha)}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
 
             {pagination.pages > 1 && (
                 <div className="pagination">
