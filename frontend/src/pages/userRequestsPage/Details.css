@@ -89,7 +89,7 @@
 .info-label {
     font-weight: 600;
     margin-bottom: 4px;
-    color: var(--text-secondary);
+    color: var(--text-color);
 }
 
 .info-value {
@@ -224,10 +224,17 @@ hr {
     }
 }
 
-/* Mobile specific enhancements */
 @media (max-width: 480px) {
     .request-details-page {
         padding: 10px;
+        box-sizing: border-box;
+    }
+
+    .request-details-page > * {
+        width: calc(100% - 20px);
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .request-details-page h1 {
@@ -237,6 +244,7 @@ hr {
 
     .request-card {
         padding: 15px;
+        width: calc(100% - 20px);
     }
 
     .request-header {
@@ -262,24 +270,52 @@ hr {
         font-size: 0.95rem;
     }
 
+    .action-buttons {
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .navigation-buttons {
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
+        display: flex;
+        justify-content: center;
+    }
+
     .cancel-button, .back-button {
         padding: 10px 20px;
         font-size: 0.95rem;
+        max-width: 100%;
     }
 
     .spinner-wrapper {
         margin: 30px 0;
+        width: calc(100% - 20px);
     }
 
     .error-container {
         padding: 15px;
         font-size: 0.9rem;
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    hr {
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .user-wrapper {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
+        width: calc(100% - 20px);
+        margin-left: auto;
+        margin-right: auto;
     }
 }
 
