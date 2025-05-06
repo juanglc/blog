@@ -10,11 +10,13 @@
     background-color: var(--background-color);
     animation: fadeIn 0.5s ease-out;
     min-height: 100vh;
+    box-sizing: border-box;
 }
 
 .user-requests > * {
     max-width: 800px;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .user-requests h1 {
@@ -110,6 +112,10 @@ table tr:last-child td {
 }
 
 @media (max-width: 768px) {
+    .user-requests {
+        padding: 15px;
+    }
+
     .user-requests h1 {
         font-size: 2rem;
     }
@@ -122,12 +128,56 @@ table tr:last-child td {
     .filter-buttons button {
         width: 100%;
     }
+}
 
+/* Mobile optimizations specifically for portrait mode */
+@media (max-width: 480px) {
+    .user-requests {
+        padding: 10px;
+        overflow-x: hidden;
+    }
+
+    .user-requests > * {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .user-requests h1 {
+        font-size: 1.8rem;
+    }
+
+    /* Make table responsive on mobile */
     table {
-        font-size: 0.9rem;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        width: 100%;
+        font-size: 0.85rem;
+        -webkit-overflow-scrolling: touch;
     }
 
     table th, table td {
-        padding: 8px 10px;
+        padding: 6px 8px;
+    }
+
+    /* Hide some less important columns on mobile */
+    table th:nth-child(1),
+    table td:nth-child(1),
+    table th:nth-child(2),
+    table td:nth-child(2) {
+        display: none;
+    }
+
+    .pagination {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 10px;
+    }
+
+    .pagination button {
+        padding: 5px 10px;
+        font-size: 0.9rem;
     }
 }
