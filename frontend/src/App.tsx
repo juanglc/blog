@@ -23,6 +23,7 @@ import RequestDetails from './pages/userRequestsPage/Details.tsx';
 import ArticleRequestsPage from './pages/articleRequestsPage/ArticleRequestsPage.tsx';
 import ArticleDetails from './pages/articleRequestsPage/ArticleDetails.tsx';
 import NavigationBar from './components/navBar/NavigationBar.tsx';
+import { API_URL } from './api/config.ts';
 
 interface PrivateRouteProps {
     element: React.ReactNode;
@@ -75,7 +76,27 @@ function App() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        setIsLoading(false);
+        const fetchCurrentUser = async () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const userId = JSON.parse(localStorage.getItem('user') || '{}')._id;
+                    if (userId) {
+                        const response = await fetch(`${API_URL}/api/users/${userId}/`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (response.ok) {
+                            const userData = await response.json();
+                            localStorage.setItem('user', JSON.stringify(userData));
+                        }
+                    }
+                } catch (e) {
+                    // Optionally handle error (e.g., logout)
+                }
+            }
+            setIsLoading(false);
+        };
+        fetchCurrentUser();
     }, []);
 
     if (isLoading) {
