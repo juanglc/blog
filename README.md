@@ -2,9 +2,9 @@
 
 ## 👥 Integrantes
  
-- **Juan Guillermo López Cortés**
-- **Luis Alejandro Téllez Forero** 
-- **Sergio Tovar Perdigón**
+- **Juan Guillermo López Cortés** - Desarrollo Front-End y Back-End, Documentación
+- **Luis Alejandro Téllez Forero** - Documentación
+- **Sergio Tovar Perdigón** - Documentación
 
 ---
 
@@ -12,7 +12,7 @@
 
 Puedes visitar la aplicación desplegada aquí:  
 🔗 [https://blog-nine-eta-12.vercel.app](https://blog-nine-eta-12.vercel.app)
-
+Debes esperar 2 minutos desde el momento en el que le das a login/sign up, ya que estamos en proceso de desarrollo, y al estar hosteado en render, debemos esperar a que el servidor despierte.
 
 ## 🛠️ Tecnologías Usadas
 
